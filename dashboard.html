@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>S&R System - Dashboard</title>
+    <link rel="stylesheet" href="pg.css">
+</head>
+<body>
+
+    <nav class="navbar">
+        <div class="navbar__logo">Space&Room</div>
+        <div class="navbar__right">
+            <div class="navbar__links">
+                <a href="#" class="navbar__link">Vitrine</a>
+                <a href="#" class="navbar__link">Inventário</a>
+            </div>
+            <div class="user-profile">
+                <span class="user-profile__name">Prof. Icaro</span>
+                <div class="user-profile__avatar" role="img" aria-label="Foto de perfil de Icaro"></div>
+            </div>
+        </div>
+    </nav>
+
+    <main class="dashboard-container">
+        <aside class="dashboard__sidebar">
+            <section class="card">
+                <h3 class="card__title">Detalhes da Reserva</h3>
+                
+                <form class="reservation-form">
+                    <div class="form-group">
+                        <label for="res-date">Data da Reserva</label>
+                        <input type="date" id="res-date" value="2026-03-11">
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="start-time">Início</label>
+                            <input type="time" id="start-time">
+                        </div>
+                        <div class="form-group">
+                            <label for="end-time">Término</label>
+                            <input type="time" id="end-time">
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="location">Espaço / Sala</label>
+                        <select id="location">
+                            <option>Selecione um local...</option>
+                            <option>Sala de Reunião A</option>
+                            <option>Laboratório Maker</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="equipment">Equipamentos</label>
+                        <select id="equipment">
+                            <option>Nenhum</option>
+                            <option>Projetor</option>
+                            <option>Kits Robótica</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="objective">Objetivo</label>
+                        <textarea id="objective" rows="3" placeholder="Descreva brevemente..."></textarea>
+                    </div>
+
+                    <button type="submit" class="btn-confirm">Confirmar Reserva</button>
+                </form>
+            </section>
+        </aside>
+
+        <article class="dashboard__content">
+            <section class="card">
+                <header class="calendar-header">
+                    <h3 class="card__title card__title--alt">Minhas Reservas</h3>
+                    <span class="calendar-header__date">Março 2026</span>
+                </header>
+
+                <div class="table-responsive">
+                    <table class="calendar-table">
+                        <thead>
+                            <tr>
+                                <th>DOM</th><th>SEG</th><th>TER</th><th>QUA</th><th>QUI</th><th>SEX</th><th>SAB</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td class="muted">30</td><td class="muted">31</td><td class="active-day">1</td><td>2</td><td>3</td><td>4</td><td>5</td>
+                            </tr>
+                            <tr>
+                                <td>6</td><td>7</td><td>8</td><td>9</td><td>10</td><td class="current-day">11</td><td>12</td>
+                            </tr>
+                            <tr>
+                                <td>13</td><td>14</td><td>15</td><td>16</td><td class="active-day">17</td><td>18</td><td>19</td>
+                            </tr>
+                            <tr>
+                                <td>20</td><td class="active-day">21</td><td>22</td><td>23</td><td>24</td><td>25</td><td>26</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+        </article>
+    </main>
+
+</body>
+</html>
