@@ -1,10 +1,21 @@
-import { del, get, post, put } from "./api";
+import { apiRequest } from "../lib/api";
 import type { Usuario } from "../types/api";
 
 export const usuarioService = {
-  list: () => get<Usuario[]>("/usuarios"),
-  getById: (id: number) => get<Usuario>(`/usuarios/${id}`),
-  create: (payload: Usuario) => post<Usuario>("/usuarios", payload),
-  update: (id: number, payload: Usuario) => put<Usuario>(`/usuarios/${id}`, payload),
-  remove: (id: number) => del<void>(`/usuarios/${id}`),
+  list: () => apiRequest<Usuario[]>("/usuarios"),
+  getById: (id: number) => apiRequest<Usuario>(`/usuarios/${id}`),
+  create: (payload: Usuario) =>
+    apiRequest<Usuario>("/usuarios", {
+      method: "POST",
+      body: JSON.stringify(payload),
+    }),
+  update: (id: number, payload: Usuario) =>
+    apiRequest<Usuario>(`/usuarios/${id}`, {
+      method: "PUT",
+      body: JSON.stringify(payload),
+    }),
+  remove: (id: number) =>
+    apiRequest<void>(`/usuarios/${id}`, {
+      method: "DELETE",
+    }),
 };

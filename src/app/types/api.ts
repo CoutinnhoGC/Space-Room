@@ -57,6 +57,8 @@ export interface Usuario {
   tokenExpiracao?: string | null;
   ultimoLoginEm?: string | null;
   ativo?: boolean | null;
+  podeReservar?: boolean | null;
+  adminPlataforma?: boolean | null;
   criadoEm?: string;
   atualizadoEm?: string;
 }

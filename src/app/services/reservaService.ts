@@ -1,10 +1,21 @@
-import { del, get, post, put } from "./api";
+import { apiRequest } from "../lib/api";
 import type { Reserva } from "../types/api";
 
 export const reservaService = {
-  list: () => get<Reserva[]>("/reservas"),
-  getById: (id: number) => get<Reserva>(`/reservas/${id}`),
-  create: (payload: Reserva) => post<Reserva>("/reservas", payload),
-  update: (id: number, payload: Reserva) => put<Reserva>(`/reservas/${id}`, payload),
-  remove: (id: number) => del<void>(`/reservas/${id}`),
+  list: () => apiRequest<Reserva[]>("/reservas"),
+  getById: (id: number) => apiRequest<Reserva>(`/reservas/${id}`),
+  create: (payload: Reserva) =>
+    apiRequest<Reserva>("/reservas", {
+      method: "POST",
+      body: JSON.stringify(payload),
+    }),
+  update: (id: number, payload: Reserva) =>
+    apiRequest<Reserva>(`/reservas/${id}`, {
+      method: "PUT",
+      body: JSON.stringify(payload),
+    }),
+  remove: (id: number) =>
+    apiRequest<void>(`/reservas/${id}`, {
+      method: "DELETE",
+    }),
 };

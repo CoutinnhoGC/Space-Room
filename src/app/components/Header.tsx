@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Menu, Search, Bell, Plus, LogOut } from "lucide-react";
 import { Link, useNavigate } from "react-router";
 import { getInitials } from "../lib/formatters";
+import { canReserve } from "../lib/permissions";
 import { getCurrentUser, setCurrentUser, subscribeToSessionUpdates } from "../lib/session";
 import type { Usuario } from "../types/api";
 
@@ -19,6 +20,8 @@ export function Header({ onMenuToggle }: HeaderProps) {
     setCurrentUser(null);
     navigate("/login");
   };
+
+  const userCanReserve = canReserve(currentUser);
 
   return (
     <header className="h-16 bg-white border-b border-gray-100 flex-shrink-0">
@@ -42,20 +45,24 @@ export function Header({ onMenuToggle }: HeaderProps) {
         </div>
 
         <div className="flex items-center gap-3">
-          <Link
-            to="/reservas/nova"
-            className="hidden md:flex items-center gap-2 bg-gradient-to-r from-blue-500 to-blue-600 text-white px-4 py-2 rounded-lg hover:from-blue-600 hover:to-blue-700 transition-all shadow-sm"
-          >
-            <Plus className="w-4 h-4" />
-            <span className="text-sm font-medium">Nova Reserva</span>
-          </Link>
+          {userCanReserve && (
+            <Link
+              to="/reservas/nova"
+              className="hidden md:flex items-center gap-2 bg-gradient-to-r from-blue-500 to-blue-600 text-white px-4 py-2 rounded-lg hover:from-blue-600 hover:to-blue-700 transition-all shadow-sm"
+            >
+              <Plus className="w-4 h-4" />
+              <span className="text-sm font-medium">Nova Reserva</span>
+            </Link>
+          )}
 
-          <Link
-            to="/reservas/nova"
-            className="md:hidden p-2 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-lg"
-          >
-            <Plus className="w-5 h-5" />
-          </Link>
+          {userCanReserve && (
+            <Link
+              to="/reservas/nova"
+              className="md:hidden p-2 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-lg"
+            >
+              <Plus className="w-5 h-5" />
+            </Link>
+          )}
 
           <button className="relative p-2 hover:bg-gray-100 rounded-lg transition-colors">
             <Bell className="w-5 h-5 text-gray-600" />

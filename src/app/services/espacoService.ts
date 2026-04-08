@@ -1,10 +1,21 @@
-import { del, get, post, put } from "./api";
+import { apiRequest } from "../lib/api";
 import type { Espaco } from "../types/api";
 
 export const espacoService = {
-  list: () => get<Espaco[]>("/espacos"),
-  getById: (id: number) => get<Espaco>(`/espacos/${id}`),
-  create: (payload: Espaco) => post<Espaco>("/espacos", payload),
-  update: (id: number, payload: Espaco) => put<Espaco>(`/espacos/${id}`, payload),
-  remove: (id: number) => del<void>(`/espacos/${id}`),
+  list: () => apiRequest<Espaco[]>("/espacos"),
+  getById: (id: number) => apiRequest<Espaco>(`/espacos/${id}`),
+  create: (payload: Espaco) =>
+    apiRequest<Espaco>("/espacos", {
+      method: "POST",
+      body: JSON.stringify(payload),
+    }),
+  update: (id: number, payload: Espaco) =>
+    apiRequest<Espaco>(`/espacos/${id}`, {
+      method: "PUT",
+      body: JSON.stringify(payload),
+    }),
+  remove: (id: number) =>
+    apiRequest<void>(`/espacos/${id}`, {
+      method: "DELETE",
+    }),
 };

@@ -1,7 +1,7 @@
-import { get } from "./api";
+import { apiRequest } from "../lib/api";
 import type { Cargo } from "../types/api";
 
 export const cargoService = {
-  list: () => get<Cargo[]>("/cargos"),
-  getById: (id: number) => get<Cargo>(`/cargos/${id}`),
+  list: () => apiRequest<Cargo[]>("/cargos"),
+  getById: (id: number) => apiRequest<Cargo>(`/cargos/${id}`),
 };

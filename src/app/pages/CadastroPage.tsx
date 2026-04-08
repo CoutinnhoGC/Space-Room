@@ -2,6 +2,7 @@ import { FormEvent, useEffect, useMemo, useState } from "react";
 import { Link, useNavigate } from "react-router";
 import { MapPin, Mail, Lock, User, Building2, Shield } from "lucide-react";
 import { toast } from "sonner";
+import { inferDefaultReservationPermission } from "../lib/permissions";
 import { setCurrentUser } from "../lib/session";
 import { isValidEmail } from "../lib/validators";
 import { cargoService } from "../services/cargoService";
@@ -49,6 +50,10 @@ export function CadastroPage() {
   }, []);
 
   const canRegister = useMemo(() => instituicoes.length > 0 && cargos.length > 0, [instituicoes, cargos]);
+  const reservaPadrao = useMemo(
+    () => inferDefaultReservationPermission(Number(form.idCargo), Number(form.idInstituicao), cargos, instituicoes),
+    [form.idCargo, form.idInstituicao, cargos, instituicoes],
+  );
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
@@ -83,6 +88,7 @@ export function CadastroPage() {
         idCargo: Number(form.idCargo),
         ativo: true,
         primeiroAcesso: false,
+        podeReservar: reservaPadrao,
       });
 
       setCurrentUser(novoUsuario);
@@ -185,6 +191,10 @@ export function CadastroPage() {
                   </select>
                 </div>
               </div>
+            </div>
+
+            <div className="text-sm text-blue-700 bg-blue-50 border border-blue-100 rounded-lg p-3">
+              Perfil inicial de reserva: {reservaPadrao ? "este cargo pode reservar por padrao" : "este cargo comeca apenas com consulta"}.
             </div>
 
             <div>

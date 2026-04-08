@@ -2,6 +2,8 @@ import { FormEvent, useEffect, useMemo, useState } from "react";
 import { Plus, Search, Eye, Edit2, XCircle, Save, X, Trash2 } from "lucide-react";
 import { Link } from "react-router";
 import { toast } from "sonner";
+import { canReserve, filterByInstitution, isPlatformAdmin } from "../lib/permissions";
+import { getCurrentUser } from "../lib/session";
 import { formatDate, formatTimeRange, getStatusReservaColor, getStatusReservaLabel } from "../lib/formatters";
 import { reservaService } from "../services/reservaService";
 import { espacoService } from "../services/espacoService";
@@ -24,6 +26,9 @@ const emptyForm = {
 };
 
 export function ReservasPage() {
+  const currentUser = getCurrentUser();
+  const userCanReserve = canReserve(currentUser);
+  const platformAdmin = isPlatformAdmin(currentUser);
   const [reservas, setReservas] = useState<Reserva[]>([]);
   const [usuarios, setUsuarios] = useState<Usuario[]>([]);
   const [espacos, setEspacos] = useState<Espaco[]>([]);
@@ -44,15 +49,20 @@ export function ReservasPage() {
         espacoService.list(),
         instituicaoService.list(),
       ]);
-      setReservas(reservasData);
-      setUsuarios(usuariosData);
-      setEspacos(espacosData);
-      setInstituicoes(instituicoesData);
+      const scopedReservas = filterByInstitution(reservasData, currentUser, (item) => item.idInstituicao);
+      const scopedUsuarios = filterByInstitution(usuariosData, currentUser, (item) => item.idInstituicao);
+      const scopedEspacos = filterByInstitution(espacosData, currentUser, (item) => item.idInstituicao);
+      const scopedInstituicoes = filterByInstitution(instituicoesData, currentUser, (item) => item.idInstituicao);
+
+      setReservas(scopedReservas);
+      setUsuarios(scopedUsuarios);
+      setEspacos(scopedEspacos);
+      setInstituicoes(scopedInstituicoes);
       setForm((current) => ({
         ...current,
-        idInstituicao: current.idInstituicao || String(instituicoesData[0]?.idInstituicao ?? ""),
-        idUsuario: current.idUsuario || String(usuariosData[0]?.idUsuario ?? ""),
-        idEspaco: current.idEspaco || String(espacosData[0]?.idEspaco ?? ""),
+        idInstituicao: current.idInstituicao || String(currentUser?.idInstituicao ?? scopedInstituicoes[0]?.idInstituicao ?? ""),
+        idUsuario: current.idUsuario || String(currentUser?.idUsuario ?? scopedUsuarios[0]?.idUsuario ?? ""),
+        idEspaco: current.idEspaco || String(scopedEspacos[0]?.idEspaco ?? ""),
       }));
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Erro ao carregar reservas.");
@@ -79,8 +89,8 @@ export function ReservasPage() {
   const resetForm = () => {
     setForm({
       ...emptyForm,
-      idInstituicao: String(instituicoes[0]?.idInstituicao ?? ""),
-      idUsuario: String(usuarios[0]?.idUsuario ?? ""),
+      idInstituicao: String(currentUser?.idInstituicao ?? instituicoes[0]?.idInstituicao ?? ""),
+      idUsuario: String(currentUser?.idUsuario ?? usuarios[0]?.idUsuario ?? ""),
       idEspaco: String(espacos[0]?.idEspaco ?? ""),
     });
     setShowForm(false);
@@ -132,6 +142,11 @@ export function ReservasPage() {
   const handleSubmit = async (event: FormEvent) => {
     event.preventDefault();
 
+    if (!userCanReserve) {
+      toast.error("Seu perfil nao possui permissao para reservar espacos.");
+      return;
+    }
+
     if (!form.titulo.trim() || !form.data || !form.horaInicio || !form.horaFim) {
       toast.error("Preencha titulo, data e horarios.");
       return;
@@ -182,20 +197,28 @@ export function ReservasPage() {
         <div className="flex items-center justify-between flex-wrap gap-4">
           <div>
             <h1 className="text-2xl font-semibold text-gray-900">Reservas</h1>
-            <p className="text-sm text-gray-500 mt-1">Gerencie todas as reservas de espacos</p>
+            <p className="text-sm text-gray-500 mt-1">Gerencie as reservas visiveis para a sua instituicao</p>
           </div>
-          <div className="flex gap-2">
-            <button onClick={() => { setShowForm(true); resetForm(); }} className="flex items-center gap-2 border border-gray-200 text-gray-700 px-4 py-2.5 rounded-lg hover:bg-gray-50 transition-all shadow-sm">
-              <Plus className="w-4 h-4" />
-              Reserva Rapida
-            </button>
-            <Link to="/reservas/nova" className="flex items-center gap-2 bg-gradient-to-r from-blue-500 to-blue-600 text-white px-4 py-2.5 rounded-lg hover:from-blue-600 hover:to-blue-700 transition-all shadow-sm">
-              <Plus className="w-4 h-4" />
-              Nova Reserva
-            </Link>
-          </div>
+          {userCanReserve && (
+            <div className="flex gap-2">
+              <button onClick={() => { setShowForm(true); resetForm(); }} className="flex items-center gap-2 border border-gray-200 text-gray-700 px-4 py-2.5 rounded-lg hover:bg-gray-50 transition-all shadow-sm">
+                <Plus className="w-4 h-4" />
+                Reserva Rapida
+              </button>
+              <Link to="/reservas/nova" className="flex items-center gap-2 bg-gradient-to-r from-blue-500 to-blue-600 text-white px-4 py-2.5 rounded-lg hover:from-blue-600 hover:to-blue-700 transition-all shadow-sm">
+                <Plus className="w-4 h-4" />
+                Nova Reserva
+              </Link>
+            </div>
+          )}
         </div>
       </div>
+
+      {!userCanReserve && (
+        <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 mb-6 text-sm text-amber-800">
+          Seu acesso permite consultar reservas e espacos disponiveis, mas nao criar novas reservas.
+        </div>
+      )}
 
       {showForm && (
         <div className="bg-white rounded-xl border border-gray-100 p-6 mb-6">
@@ -206,10 +229,10 @@ export function ReservasPage() {
           <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <input value={form.titulo} onChange={(event) => setForm((current) => ({ ...current, titulo: event.target.value }))} placeholder="Titulo" className="px-4 py-3 bg-gray-50 border border-gray-200 rounded-lg" />
             <input value={form.finalidade} onChange={(event) => setForm((current) => ({ ...current, finalidade: event.target.value }))} placeholder="Finalidade" className="px-4 py-3 bg-gray-50 border border-gray-200 rounded-lg" />
-            <select value={form.idInstituicao} onChange={(event) => setForm((current) => ({ ...current, idInstituicao: event.target.value }))} className="px-4 py-3 bg-gray-50 border border-gray-200 rounded-lg">
+            <select value={form.idInstituicao} onChange={(event) => setForm((current) => ({ ...current, idInstituicao: event.target.value }))} className="px-4 py-3 bg-gray-50 border border-gray-200 rounded-lg" disabled>
               {instituicoes.map((item) => <option key={item.idInstituicao} value={item.idInstituicao}>{item.nomeFantasia}</option>)}
             </select>
-            <select value={form.idUsuario} onChange={(event) => setForm((current) => ({ ...current, idUsuario: event.target.value }))} className="px-4 py-3 bg-gray-50 border border-gray-200 rounded-lg">
+            <select value={form.idUsuario} onChange={(event) => setForm((current) => ({ ...current, idUsuario: event.target.value }))} className="px-4 py-3 bg-gray-50 border border-gray-200 rounded-lg" disabled={!platformAdmin}>
               {usuarios.map((item) => <option key={item.idUsuario} value={item.idUsuario}>{item.nome}</option>)}
             </select>
             <select value={form.idEspaco} onChange={(event) => setForm((current) => ({ ...current, idEspaco: event.target.value }))} className="px-4 py-3 bg-gray-50 border border-gray-200 rounded-lg">
@@ -228,7 +251,7 @@ export function ReservasPage() {
             </div>
             <textarea value={form.observacao} onChange={(event) => setForm((current) => ({ ...current, observacao: event.target.value }))} placeholder="Observacao" rows={4} className="px-4 py-3 bg-gray-50 border border-gray-200 rounded-lg md:col-span-2" />
             <div className="md:col-span-2 flex items-center gap-3">
-              <button type="submit" disabled={saving} className="flex items-center gap-2 bg-gradient-to-r from-blue-500 to-blue-600 text-white px-5 py-3 rounded-lg disabled:opacity-70"><Save className="w-4 h-4" />{saving ? "Salvando..." : "Salvar"}</button>
+              <button type="submit" disabled={saving || !userCanReserve} className="flex items-center gap-2 bg-gradient-to-r from-blue-500 to-blue-600 text-white px-5 py-3 rounded-lg disabled:opacity-70"><Save className="w-4 h-4" />{saving ? "Salvando..." : "Salvar"}</button>
               <button type="button" onClick={resetForm} className="px-5 py-3 border border-gray-200 rounded-lg text-gray-700">Cancelar</button>
             </div>
           </form>
@@ -283,9 +306,9 @@ export function ReservasPage() {
                     <td className="px-6 py-4">
                       <div className="flex items-center justify-end gap-2">
                         <button className="p-1.5 text-gray-600 hover:bg-gray-100 rounded transition-colors" title="Visualizar"><Eye className="w-4 h-4" /></button>
-                        <button onClick={() => handleEdit(reservation)} className="p-1.5 text-blue-600 hover:bg-blue-50 rounded transition-colors" title="Editar"><Edit2 className="w-4 h-4" /></button>
-                        <button onClick={() => handleCancel(reservation)} className="p-1.5 text-yellow-600 hover:bg-yellow-50 rounded transition-colors" title="Cancelar"><XCircle className="w-4 h-4" /></button>
-                        <button onClick={() => handleDelete(reservation.idReserva)} className="p-1.5 text-red-600 hover:bg-red-50 rounded transition-colors" title="Excluir"><Trash2 className="w-4 h-4" /></button>
+                        {userCanReserve && <button onClick={() => handleEdit(reservation)} className="p-1.5 text-blue-600 hover:bg-blue-50 rounded transition-colors" title="Editar"><Edit2 className="w-4 h-4" /></button>}
+                        {userCanReserve && <button onClick={() => handleCancel(reservation)} className="p-1.5 text-yellow-600 hover:bg-yellow-50 rounded transition-colors" title="Cancelar"><XCircle className="w-4 h-4" /></button>}
+                        {platformAdmin && <button onClick={() => handleDelete(reservation.idReserva)} className="p-1.5 text-red-600 hover:bg-red-50 rounded transition-colors" title="Excluir"><Trash2 className="w-4 h-4" /></button>}
                       </div>
                     </td>
                   </tr>

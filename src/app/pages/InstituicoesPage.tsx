@@ -1,7 +1,9 @@
 import { FormEvent, useEffect, useMemo, useState } from "react";
-import { Building2, Plus, Search, MapPin, Users, Edit2, Save, Trash2, X } from "lucide-react";
+import { Building2, Plus, Search, MapPin, Edit2, Save, Trash2, X } from "lucide-react";
 import { toast } from "sonner";
 import { getTipoInstituicaoLabel } from "../lib/formatters";
+import { canManageInstitutions, filterByInstitution, isPlatformAdmin } from "../lib/permissions";
+import { getCurrentUser } from "../lib/session";
 import { espacoService } from "../services/espacoService";
 import { instituicaoService } from "../services/instituicaoService";
 import { usuarioService } from "../services/usuarioService";
@@ -22,6 +24,7 @@ const emptyForm = {
 };
 
 export function InstituicoesPage() {
+  const currentUser = getCurrentUser();
   const [instituicoes, setInstituicoes] = useState<Instituicao[]>([]);
   const [usuarios, setUsuarios] = useState<Usuario[]>([]);
   const [espacos, setEspacos] = useState<Espaco[]>([]);
@@ -30,6 +33,9 @@ export function InstituicoesPage() {
   const [search, setSearch] = useState("");
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+
+  const canCreateInstitution = canManageInstitutions(currentUser);
+  const platformAdmin = isPlatformAdmin(currentUser);
 
   const loadData = async () => {
     try {
@@ -53,9 +59,22 @@ export function InstituicoesPage() {
     loadData();
   }, []);
 
+  const visibleInstitutions = useMemo(
+    () => filterByInstitution(instituicoes, currentUser, (item) => item.idInstituicao),
+    [instituicoes, currentUser],
+  );
+  const visibleUsers = useMemo(
+    () => filterByInstitution(usuarios, currentUser, (item) => item.idInstituicao),
+    [usuarios, currentUser],
+  );
+  const visibleSpaces = useMemo(
+    () => filterByInstitution(espacos, currentUser, (item) => item.idInstituicao),
+    [espacos, currentUser],
+  );
+
   const filtered = useMemo(() => {
-    return instituicoes.filter((item) => `${item.nomeFantasia} ${item.cidade ?? ""}`.toLowerCase().includes(search.toLowerCase()));
-  }, [instituicoes, search]);
+    return visibleInstitutions.filter((item) => `${item.nomeFantasia} ${item.cidade ?? ""}`.toLowerCase().includes(search.toLowerCase()));
+  }, [visibleInstitutions, search]);
 
   const resetForm = () => {
     setForm(emptyForm);
@@ -138,14 +157,24 @@ export function InstituicoesPage() {
         <div className="flex items-center justify-between flex-wrap gap-4">
           <div>
             <h1 className="text-2xl font-semibold text-gray-900">Instituicoes</h1>
-            <p className="text-sm text-gray-500 mt-1">Gerencie as instituicoes cadastradas</p>
+            <p className="text-sm text-gray-500 mt-1">
+              {platformAdmin ? "Gerencie todas as instituicoes cadastradas" : "Visualize e mantenha apenas a sua instituicao"}
+            </p>
           </div>
-          <button onClick={() => { setShowForm(true); setForm(emptyForm); }} className="flex items-center gap-2 bg-gradient-to-r from-blue-500 to-blue-600 text-white px-4 py-2.5 rounded-lg hover:from-blue-600 hover:to-blue-700 transition-all shadow-sm">
-            <Plus className="w-4 h-4" />
-            Nova Instituicao
-          </button>
+          {canCreateInstitution && (
+            <button onClick={() => { setShowForm(true); setForm(emptyForm); }} className="flex items-center gap-2 bg-gradient-to-r from-blue-500 to-blue-600 text-white px-4 py-2.5 rounded-lg hover:from-blue-600 hover:to-blue-700 transition-all shadow-sm">
+              <Plus className="w-4 h-4" />
+              Nova Instituicao
+            </button>
+          )}
         </div>
       </div>
+
+      {!platformAdmin && (
+        <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 mb-6 text-sm text-amber-800">
+          O cadastro de novas instituicoes fica restrito aos criadores da plataforma. Seu acesso permanece limitado a sua instituicao atual.
+        </div>
+      )}
 
       {showForm && (
         <div className="bg-white rounded-xl border border-gray-100 p-6 mb-6">
@@ -185,8 +214,8 @@ export function InstituicoesPage() {
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {!loading && filtered.map((institution) => {
-          const totalSpaces = espacos.filter((item) => item.idInstituicao === institution.idInstituicao).length;
-          const totalUsers = usuarios.filter((item) => item.idInstituicao === institution.idInstituicao).length;
+          const totalSpaces = visibleSpaces.filter((item) => item.idInstituicao === institution.idInstituicao).length;
+          const totalUsers = visibleUsers.filter((item) => item.idInstituicao === institution.idInstituicao).length;
           return (
             <div key={institution.idInstituicao} className="bg-white border border-gray-100 rounded-xl p-6 hover:shadow-md transition-shadow">
               <div className="flex items-start justify-between mb-4">
@@ -210,7 +239,9 @@ export function InstituicoesPage() {
 
               <div className="flex gap-2">
                 <button onClick={() => handleEdit(institution)} className="flex-1 flex items-center justify-center gap-2 px-4 py-2 border border-gray-200 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors"><Edit2 className="w-4 h-4" />Gerenciar</button>
-                <button onClick={() => handleDelete(institution.idInstituicao)} className="px-3 py-2 border border-red-200 rounded-lg text-red-600 hover:bg-red-50 transition-colors"><Trash2 className="w-4 h-4" /></button>
+                {platformAdmin && (
+                  <button onClick={() => handleDelete(institution.idInstituicao)} className="px-3 py-2 border border-red-200 rounded-lg text-red-600 hover:bg-red-50 transition-colors"><Trash2 className="w-4 h-4" /></button>
+                )}
               </div>
             </div>
           );

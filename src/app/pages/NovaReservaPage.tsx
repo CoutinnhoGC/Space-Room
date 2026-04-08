@@ -2,6 +2,7 @@ import { FormEvent, useEffect, useMemo, useState } from "react";
 import { Calendar, Clock, MapPin, User, Building2, AlertCircle, CheckCircle } from "lucide-react";
 import { Link, useNavigate } from "react-router";
 import { toast } from "sonner";
+import { canReserve, filterByInstitution } from "../lib/permissions";
 import { getCurrentUser } from "../lib/session";
 import { validateReservationInterval } from "../lib/validators";
 import { instituicaoService } from "../services/instituicaoService";
@@ -13,6 +14,7 @@ import type { Espaco, Instituicao, Reserva, Usuario } from "../types/api";
 export function NovaReservaPage() {
   const navigate = useNavigate();
   const currentUser = getCurrentUser();
+  const userCanReserve = canReserve(currentUser);
   const [instituicoes, setInstituicoes] = useState<Instituicao[]>([]);
   const [espacos, setEspacos] = useState<Espaco[]>([]);
   const [usuarios, setUsuarios] = useState<Usuario[]>([]);
@@ -40,15 +42,21 @@ export function NovaReservaPage() {
           usuarioService.list(),
           reservaService.list(),
         ]);
-        setInstituicoes(instituicoesData);
-        setEspacos(espacosData);
-        setUsuarios(usuariosData);
-        setReservas(reservasData);
+
+        const scopedInstitutions = filterByInstitution(instituicoesData, currentUser, (item) => item.idInstituicao);
+        const scopedSpaces = filterByInstitution(espacosData, currentUser, (item) => item.idInstituicao);
+        const scopedUsers = filterByInstitution(usuariosData, currentUser, (item) => item.idInstituicao);
+        const scopedReservations = filterByInstitution(reservasData, currentUser, (item) => item.idInstituicao);
+
+        setInstituicoes(scopedInstitutions);
+        setEspacos(scopedSpaces);
+        setUsuarios(scopedUsers);
+        setReservas(scopedReservations);
         setForm((current) => ({
           ...current,
-          idInstituicao: current.idInstituicao || String(currentUser?.idInstituicao ?? instituicoesData[0]?.idInstituicao ?? ""),
-          idUsuario: current.idUsuario || String(currentUser?.idUsuario ?? usuariosData[0]?.idUsuario ?? ""),
-          idEspaco: current.idEspaco || String(espacosData[0]?.idEspaco ?? ""),
+          idInstituicao: current.idInstituicao || String(currentUser?.idInstituicao ?? scopedInstitutions[0]?.idInstituicao ?? ""),
+          idUsuario: String(currentUser?.idUsuario ?? scopedUsers[0]?.idUsuario ?? ""),
+          idEspaco: current.idEspaco || String(scopedSpaces[0]?.idEspaco ?? ""),
         }));
       } catch (error) {
         toast.error(error instanceof Error ? error.message : "Nao foi possivel carregar dados para a reserva.");
@@ -63,6 +71,11 @@ export function NovaReservaPage() {
   const selectedInstitutionSpaces = useMemo(() => {
     return espacos.filter((item) => String(item.idInstituicao) === form.idInstituicao);
   }, [espacos, form.idInstituicao]);
+
+  const responsibleUser = useMemo(
+    () => usuarios.find((item) => item.idUsuario === Number(form.idUsuario)),
+    [usuarios, form.idUsuario],
+  );
 
   const dataInicio = form.data && form.horaInicio ? `${form.data}T${form.horaInicio}:00` : "";
   const dataFim = form.data && form.horaFim ? `${form.data}T${form.horaFim}:00` : "";
@@ -81,6 +94,11 @@ export function NovaReservaPage() {
 
   const handleSubmit = async (event: FormEvent) => {
     event.preventDefault();
+
+    if (!userCanReserve) {
+      toast.error("Seu perfil nao possui permissao para reservar espacos.");
+      return;
+    }
 
     const intervalError = validateReservationInterval(dataInicio, dataFim);
     if (intervalError) {
@@ -132,13 +150,19 @@ export function NovaReservaPage() {
         <p className="text-sm text-gray-500 mt-1">Preencha os dados abaixo para criar uma nova reserva</p>
       </div>
 
+      {!userCanReserve && (
+        <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 mb-6 text-sm text-amber-800">
+          Seu usuario esta configurado apenas para consultar reservas e espacos disponiveis. Fale com o responsavel da instituicao para liberar reservas no seu perfil.
+        </div>
+      )}
+
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2">
           <div className="bg-white rounded-xl border border-gray-100 p-6">
             <form className="space-y-6" onSubmit={handleSubmit}>
               <div>
                 <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-2"><Building2 className="w-4 h-4" />Instituicao</label>
-                <select value={form.idInstituicao} onChange={(event) => setForm((current) => ({ ...current, idInstituicao: event.target.value, idEspaco: "" }))} className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-lg text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                <select value={form.idInstituicao} onChange={(event) => setForm((current) => ({ ...current, idInstituicao: event.target.value, idEspaco: "" }))} className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-lg text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent" disabled>
                   {instituicoes.map((instituicao) => <option key={instituicao.idInstituicao} value={instituicao.idInstituicao}>{instituicao.nomeFantasia}</option>)}
                 </select>
               </div>
@@ -173,7 +197,7 @@ export function NovaReservaPage() {
 
               <div>
                 <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-2"><User className="w-4 h-4" />Responsavel</label>
-                <select value={form.idUsuario} onChange={(event) => setForm((current) => ({ ...current, idUsuario: event.target.value }))} className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-lg text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                <select value={form.idUsuario} onChange={(event) => setForm((current) => ({ ...current, idUsuario: event.target.value }))} className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-lg text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent" disabled>
                   {usuarios.map((usuario) => <option key={usuario.idUsuario} value={usuario.idUsuario}>{usuario.nome}</option>)}
                 </select>
               </div>
@@ -199,7 +223,7 @@ export function NovaReservaPage() {
               )}
 
               <div className="flex items-center gap-3 pt-4 border-t border-gray-100">
-                <button type="submit" disabled={saving || loading} className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-lg font-medium hover:from-blue-600 hover:to-blue-700 transition-all shadow-sm disabled:opacity-70">
+                <button type="submit" disabled={saving || loading || !userCanReserve} className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-lg font-medium hover:from-blue-600 hover:to-blue-700 transition-all shadow-sm disabled:opacity-70">
                   <CheckCircle className="w-4 h-4" />
                   {saving ? "Confirmando..." : "Confirmar Reserva"}
                 </button>
@@ -214,9 +238,17 @@ export function NovaReservaPage() {
             <h3 className="text-sm font-semibold text-blue-900 mb-3">Dicas para Reservar</h3>
             <ul className="space-y-2 text-sm text-blue-700">
               <li>Verifique a disponibilidade antes de confirmar.</li>
-              <li>Os IDs usados na reserva sao validados contra instituicao, usuario e espaco existentes.</li>
+              <li>A reserva sempre fica vinculada a sua instituicao.</li>
               <li>Conflitos de horario sao bloqueados no frontend e no backend.</li>
             </ul>
+          </div>
+
+          <div className="bg-white border border-gray-100 rounded-xl p-5">
+            <h3 className="text-sm font-semibold text-gray-900 mb-3">Resumo</h3>
+            <div className="space-y-2 text-sm text-gray-600">
+              <div>Responsavel: {responsibleUser?.nome ?? "Nao definido"}</div>
+              <div>Perfil: {userCanReserve ? "Pode reservar" : "Somente consulta"}</div>
+            </div>
           </div>
 
           <div className="bg-white border border-gray-100 rounded-xl p-5">
