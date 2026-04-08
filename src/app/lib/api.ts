@@ -1,7 +1,15 @@
 import { getCurrentUser } from "./session";
 import type { ApiProblem } from "../types/api";
 
-const API_BASE_URL = "http://localhost:8080";
+const rawBaseUrl = import.meta.env.VITE_API_URL;
+
+function normalizeBaseUrl(url?: string) {
+  return (url ?? "").trim().replace(/\/+$/, "");
+}
+
+export const BASE_URL = normalizeBaseUrl(rawBaseUrl);
+export const API_BASE_URL = BASE_URL;
+const API_DEBUG = import.meta.env.VITE_API_DEBUG === "true";
 
 export class ApiError extends Error {
   status: number;
@@ -13,6 +21,18 @@ export class ApiError extends Error {
     this.status = status;
     this.title = title;
   }
+}
+
+function buildUrl(path: string) {
+  if (!BASE_URL) {
+    throw new ApiError(
+      "A variavel VITE_API_URL nao foi configurada. Defina a URL da API nas variaveis do frontend.",
+      500,
+      "Configuracao da API ausente",
+    );
+  }
+
+  return `${BASE_URL}${path.startsWith("/") ? path : `/${path}`}`;
 }
 
 async function parseResponse<T>(response: Response): Promise<T> {
@@ -37,29 +57,47 @@ async function parseResponse<T>(response: Response): Promise<T> {
 }
 
 export async function apiRequest<T>(path: string, init?: RequestInit): Promise<T> {
+  const url = buildUrl(path);
+  const headers = new Headers(init?.headers);
+  const currentUser = getCurrentUser();
+
+  if (!headers.has("Content-Type") && init?.body !== undefined) {
+    headers.set("Content-Type", "application/json");
+  }
+
+  if (currentUser?.idUsuario && !headers.has("X-User-Id")) {
+    headers.set("X-User-Id", String(currentUser.idUsuario));
+  }
+
+  if (API_DEBUG) {
+    console.debug(`[api] ${init?.method ?? "GET"} ${url}`);
+  }
+
   try {
-    const currentUser = getCurrentUser();
-    const response = await fetch(`${API_BASE_URL}${path}`, {
-      headers: {
-        "Content-Type": "application/json",
-        ...(currentUser?.idUsuario ? { "X-User-Id": String(currentUser.idUsuario) } : {}),
-        ...(init?.headers ?? {}),
-      },
+    const response = await fetch(url, {
       ...init,
+      headers,
     });
 
-    return parseResponse<T>(response);
+    return await parseResponse<T>(response);
   } catch (error) {
     if (error instanceof ApiError) {
+      if (API_DEBUG) {
+        console.error(`[api] ${init?.method ?? "GET"} ${url} failed`, error);
+      }
       throw error;
     }
 
-    throw new ApiError(
-      "Nao foi possivel conectar ao backend em http://localhost:8080. Verifique se o Spring Boot esta em execucao.",
+    const connectionError = new ApiError(
+      `Nao foi possivel conectar a API em ${BASE_URL}. Verifique se VITE_API_URL esta apontando para o servico correto.`,
       0,
-      "Backend indisponivel",
+      "API indisponivel",
     );
+
+    if (API_DEBUG) {
+      console.error(`[api] ${init?.method ?? "GET"} ${url} failed`, error);
+    }
+
+    throw connectionError;
   }
 }
-
-export { API_BASE_URL };
