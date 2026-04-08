@@ -3,6 +3,7 @@ import { Plus, Search, Eye, Edit2, XCircle, Save, X, Trash2 } from "lucide-react
 import { Link } from "react-router";
 import { toast } from "sonner";
 import { canReserve, filterByInstitution, isPlatformAdmin } from "../lib/permissions";
+import { createNotification } from "../lib/notifications";
 import { getCurrentUser } from "../lib/session";
 import { formatDate, formatTimeRange, getStatusReservaColor, getStatusReservaLabel } from "../lib/formatters";
 import { reservaService } from "../services/reservaService";
@@ -131,7 +132,15 @@ export function ReservasPage() {
 
   const handleCancel = async (reservation: Reserva) => {
     try {
-      await reservaService.update(Number(reservation.idReserva), { ...reservation, status: "CANCELADA" });
+      const updated = await reservaService.update(Number(reservation.idReserva), { ...reservation, status: "CANCELADA" });
+      createNotification({
+        type: "RESERVA_ATUALIZADA",
+        institutionId: updated.idInstituicao,
+        title: "Reserva cancelada",
+        description: `${updated.titulo} foi cancelada${currentUser?.nome ? ` por ${currentUser.nome}` : ""}.`,
+        entityId: updated.idReserva,
+        actorUserId: currentUser?.idUsuario,
+      });
       toast.success("Reserva cancelada com sucesso.");
       await loadData();
     } catch (error) {
@@ -175,10 +184,26 @@ export function ReservasPage() {
       };
 
       if (form.idReserva) {
-        await reservaService.update(Number(form.idReserva), { ...payload, idReserva: Number(form.idReserva) });
+        const updated = await reservaService.update(Number(form.idReserva), { ...payload, idReserva: Number(form.idReserva) });
+        createNotification({
+          type: "RESERVA_ATUALIZADA",
+          institutionId: updated.idInstituicao,
+          title: "Reserva alterada",
+          description: `${updated.titulo} foi atualizada${currentUser?.nome ? ` por ${currentUser.nome}` : ""}.`,
+          entityId: updated.idReserva,
+          actorUserId: currentUser?.idUsuario,
+        });
         toast.success("Reserva atualizada com sucesso.");
       } else {
-        await reservaService.create(payload);
+        const created = await reservaService.create(payload);
+        createNotification({
+          type: "RESERVA_CRIADA",
+          institutionId: created.idInstituicao,
+          title: "Nova reserva criada",
+          description: `${created.titulo} foi registrada${currentUser?.nome ? ` por ${currentUser.nome}` : ""}.`,
+          entityId: created.idReserva,
+          actorUserId: currentUser?.idUsuario,
+        });
         toast.success("Reserva criada com sucesso.");
       }
 

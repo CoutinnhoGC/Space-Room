@@ -2,6 +2,7 @@ import { FormEvent, useEffect, useMemo, useState } from "react";
 import { Calendar, Clock, MapPin, User, Building2, AlertCircle, CheckCircle } from "lucide-react";
 import { Link, useNavigate } from "react-router";
 import { toast } from "sonner";
+import { createNotification } from "../lib/notifications";
 import { canReserve, filterByInstitution } from "../lib/permissions";
 import { getCurrentUser } from "../lib/session";
 import { validateReservationInterval } from "../lib/validators";
@@ -118,7 +119,7 @@ export function NovaReservaPage() {
 
     try {
       setSaving(true);
-      await reservaService.create({
+      const created = await reservaService.create({
         idInstituicao: Number(form.idInstituicao),
         idUsuario: Number(form.idUsuario),
         idEspaco: Number(form.idEspaco),
@@ -128,6 +129,14 @@ export function NovaReservaPage() {
         dataInicio,
         dataFim,
         status: "PENDENTE",
+      });
+      createNotification({
+        type: "RESERVA_CRIADA",
+        institutionId: created.idInstituicao,
+        title: "Nova reserva criada",
+        description: `${created.titulo} foi registrada${currentUser?.nome ? ` por ${currentUser.nome}` : ""}.`,
+        entityId: created.idReserva,
+        actorUserId: currentUser?.idUsuario,
       });
       toast.success("Reserva criada com sucesso.");
       navigate("/reservas");

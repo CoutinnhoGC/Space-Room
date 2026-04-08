@@ -17,6 +17,7 @@ export type TipoEspaco =
   | "OUTRO";
 
 export type StatusReserva = "PENDENTE" | "CONFIRMADA" | "CANCELADA" | "CONCLUIDA";
+export type NotificationType = "RESERVA_CRIADA" | "RESERVA_ATUALIZADA" | "ESPACO_CRIADO";
 
 export interface Cargo {
   idCargo: number;
@@ -97,6 +98,24 @@ export interface ApiProblem {
   title?: string;
   detail?: string;
   status?: number;
+}
+
+export interface AppNotification {
+  id: string;
+  type: NotificationType;
+  institutionId: number;
+  title: string;
+  description: string;
+  entityId?: number;
+  actorUserId?: number;
+  createdAt: string;
+  readByUserIds?: number[];
+}
+
+export interface NotificationPreferences {
+  novasReservas: boolean;
+  alteracoesReserva: boolean;
+  novosEspacos: boolean;
 }
 
 export interface DashboardMetrics {

@@ -2,6 +2,8 @@ import { FormEvent, useEffect, useMemo, useState } from "react";
 import { Plus, Search, MapPin, Users, Edit2, Trash2, Save, X } from "lucide-react";
 import { toast } from "sonner";
 import { getTipoEspacoLabel } from "../lib/formatters";
+import { createNotification } from "../lib/notifications";
+import { getCurrentUser } from "../lib/session";
 import { espacoService } from "../services/espacoService";
 import { instituicaoService } from "../services/instituicaoService";
 import type { Espaco, Instituicao, TipoEspaco } from "../types/api";
@@ -19,6 +21,7 @@ const emptyForm = {
 };
 
 export function EspacosPage() {
+  const currentUser = getCurrentUser();
   const [espacos, setEspacos] = useState<Espaco[]>([]);
   const [instituicoes, setInstituicoes] = useState<Instituicao[]>([]);
   const [search, setSearch] = useState("");
@@ -112,7 +115,15 @@ export function EspacosPage() {
         await espacoService.update(Number(form.idEspaco), { ...payload, idEspaco: Number(form.idEspaco) });
         toast.success("Espaco atualizado com sucesso.");
       } else {
-        await espacoService.create(payload);
+        const created = await espacoService.create(payload);
+        createNotification({
+          type: "ESPACO_CRIADO",
+          institutionId: created.idInstituicao,
+          title: "Novo espaco cadastrado",
+          description: `${created.nome} foi adicionado${currentUser?.nome ? ` por ${currentUser.nome}` : ""}.`,
+          entityId: created.idEspaco,
+          actorUserId: currentUser?.idUsuario,
+        });
         toast.success("Espaco criado com sucesso.");
       }
 

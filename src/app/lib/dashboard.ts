@@ -1,4 +1,5 @@
-import { eachDayOfInterval, format, startOfDay, subDays } from "date-fns";
+import { eachDayOfInterval, endOfDay, endOfMonth, format, startOfDay, startOfMonth, subDays } from "date-fns";
+import type { DashboardPeriod } from "../components/FilterBar";
 import type { DashboardMetrics, Espaco, Reserva, Usuario } from "../types/api";
 import { isReservaAtivaAgora, isReservaHoje } from "./formatters";
 
@@ -24,16 +25,63 @@ export function buildDashboardMetrics(reservas: Reserva[], espacos: Espaco[], us
   };
 }
 
-export function buildReservationsByDay(reservas: Reserva[]) {
-  const today = startOfDay(new Date());
-  const period = eachDayOfInterval({ start: subDays(today, 6), end: today });
+export function filterReservationsByPeriod(reservas: Reserva[], period: DashboardPeriod, now = new Date()) {
+  const currentDate = startOfDay(now);
+  const currentMonthStart = startOfMonth(currentDate);
 
-  return period.map((date) => {
+  return reservas.filter((item) => {
+    const start = new Date(item.dataInicio);
+
+    switch (period) {
+      case "HOJE":
+        return start >= currentDate && start <= endOfDay(currentDate);
+      case "7_DIAS":
+        return start >= subDays(currentDate, 6) && start <= endOfDay(currentDate);
+      case "30_DIAS":
+        return start >= subDays(currentDate, 29) && start <= endOfDay(currentDate);
+      case "MES_ATUAL":
+        return start >= currentMonthStart && start <= endOfMonth(currentDate);
+    }
+  });
+}
+
+export function getDashboardPeriodLabel(period: DashboardPeriod) {
+  switch (period) {
+    case "HOJE":
+      return "hoje";
+    case "7_DIAS":
+      return "nos ultimos 7 dias";
+    case "30_DIAS":
+      return "nos ultimos 30 dias";
+    case "MES_ATUAL":
+      return "no mes atual";
+  }
+}
+
+export function buildReservationsByDay(reservas: Reserva[], period: DashboardPeriod) {
+  const today = startOfDay(new Date());
+  const periodStart = (() => {
+    switch (period) {
+      case "HOJE":
+        return today;
+      case "7_DIAS":
+        return subDays(today, 6);
+      case "30_DIAS":
+        return subDays(today, 29);
+      case "MES_ATUAL":
+        return startOfMonth(today);
+    }
+  })();
+
+  const interval = eachDayOfInterval({ start: periodStart, end: today });
+  const shortRange = interval.length <= 7;
+
+  return interval.map((date) => {
     const key = format(date, "yyyy-MM-dd");
     const count = reservas.filter((item) => item.dataInicio.startsWith(key) && item.status !== "CANCELADA").length;
 
     return {
-      name: format(date, "EEE"),
+      name: format(date, shortRange ? "EEE" : "dd/MM"),
       reservas: count,
     };
   });
