@@ -36,7 +36,7 @@ export function getStatusReservaLabel(status?: StatusReserva | null) {
     PENDENTE: "Pendente",
     CONFIRMADA: "Confirmada",
     CANCELADA: "Cancelada",
-    CONCLUIDA: "Concluida",
+    CONCLUIDA: "Concluída",
   };
 
   return map[status ?? "PENDENTE"];
@@ -44,17 +44,17 @@ export function getStatusReservaLabel(status?: StatusReserva | null) {
 
 export function getStatusReservaColor(status?: StatusReserva | null) {
   const map: Record<StatusReserva, string> = {
-    PENDENTE: "bg-yellow-50 text-yellow-700 border-yellow-200",
-    CONFIRMADA: "bg-green-50 text-green-700 border-green-200",
-    CANCELADA: "bg-red-50 text-red-700 border-red-200",
-    CONCLUIDA: "bg-blue-50 text-blue-700 border-blue-200",
+    PENDENTE: "bg-yellow-50 text-yellow-700 border-yellow-200 dark:bg-yellow-950/40 dark:text-yellow-300 dark:border-yellow-900/60",
+    CONFIRMADA: "bg-green-50 text-green-700 border-green-200 dark:bg-green-950/40 dark:text-green-300 dark:border-green-900/60",
+    CANCELADA: "bg-red-50 text-red-700 border-red-200 dark:bg-red-950/40 dark:text-red-300 dark:border-red-900/60",
+    CONCLUIDA: "bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-950/40 dark:text-blue-300 dark:border-blue-900/60",
   };
 
   return map[status ?? "PENDENTE"];
 }
 
 export function getInstituicaoNome(instituicao?: Instituicao | null) {
-  return instituicao?.nomeFantasia ?? "Instituicao nao informada";
+  return instituicao?.nomeFantasia ?? "Instituição não informada";
 }
 
 export function getTipoInstituicaoLabel(tipo?: TipoInstituicao | null) {
@@ -74,11 +74,11 @@ export function getTipoInstituicaoLabel(tipo?: TipoInstituicao | null) {
 export function getTipoEspacoLabel(tipo?: TipoEspaco | null) {
   const map: Record<TipoEspaco, string> = {
     SALA: "Sala",
-    LABORATORIO: "Laboratorio",
-    AUDITORIO: "Auditorio",
+    LABORATORIO: "Laboratório",
+    AUDITORIO: "Auditório",
     BIBLIOTECA: "Biblioteca",
     COWORKING: "Coworking",
-    SALA_REUNIAO: "Sala de Reuniao",
+    SALA_REUNIAO: "Sala de Reunião",
     OUTRO: "Outro",
   };
 

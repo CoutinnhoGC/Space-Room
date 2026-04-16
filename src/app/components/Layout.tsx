@@ -14,7 +14,7 @@ export function Layout() {
   }, [location.pathname]);
 
   return (
-    <div className="flex min-h-screen bg-gray-50">
+    <div className="flex min-h-screen bg-gray-50 text-gray-900 dark:bg-slate-900 dark:text-slate-100">
       <Sidebar
         isOpen={sidebarOpen}
         collapsed={sidebarCollapsed}

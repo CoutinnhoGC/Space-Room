@@ -1,16 +1,20 @@
 import { FormEvent, useEffect, useMemo, useState } from "react";
-import { Plus, Search, Eye, Edit2, XCircle, Save, X, Trash2 } from "lucide-react";
+import { CalendarRange, Clock3, Eye, Edit2, FileText, Plus, Search, Trash2, User2, X, XCircle } from "lucide-react";
 import { Link } from "react-router";
 import { toast } from "sonner";
-import { canReserve, filterByInstitution, isPlatformAdmin } from "../lib/permissions";
+import { DetailPanel } from "../components/DetailPanel";
 import { createNotification } from "../lib/notifications";
+import { canReserve, filterByInstitution, isPlatformAdmin } from "../lib/permissions";
 import { getCurrentUser } from "../lib/session";
 import { formatDate, formatTimeRange, getStatusReservaColor, getStatusReservaLabel } from "../lib/formatters";
-import { reservaService } from "../services/reservaService";
+import { validateReservationInterval } from "../lib/validators";
 import { espacoService } from "../services/espacoService";
 import { instituicaoService } from "../services/instituicaoService";
+import { reservaService } from "../services/reservaService";
 import { usuarioService } from "../services/usuarioService";
 import type { Espaco, Instituicao, Reserva, StatusReserva, Usuario } from "../types/api";
+
+type PanelMode = "quick" | "edit" | null;
 
 const emptyForm = {
   idReserva: "",
@@ -26,6 +30,34 @@ const emptyForm = {
   observacao: "",
 };
 
+function formatInputDate(date: Date) {
+  return date.toISOString().slice(0, 10);
+}
+
+function formatInputTime(date: Date) {
+  return date.toTimeString().slice(0, 5);
+}
+
+function buildQuickDefaults(currentUser: Usuario | null, instituicoes: Instituicao[], usuarios: Usuario[], espacos: Espaco[]) {
+  const now = new Date();
+  const start = new Date(now);
+  start.setMinutes(0, 0, 0);
+  start.setHours(start.getHours() + 1);
+  const end = new Date(start);
+  end.setHours(end.getHours() + 1);
+
+  return {
+    ...emptyForm,
+    idInstituicao: String(currentUser?.idInstituicao ?? instituicoes[0]?.idInstituicao ?? ""),
+    idUsuario: String(currentUser?.idUsuario ?? usuarios[0]?.idUsuario ?? ""),
+    idEspaco: String(espacos[0]?.idEspaco ?? ""),
+    data: formatInputDate(start),
+    horaInicio: formatInputTime(start),
+    horaFim: formatInputTime(end),
+    titulo: "",
+  };
+}
+
 export function ReservasPage() {
   const currentUser = getCurrentUser();
   const userCanReserve = canReserve(currentUser);
@@ -36,7 +68,8 @@ export function ReservasPage() {
   const [instituicoes, setInstituicoes] = useState<Instituicao[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [showForm, setShowForm] = useState(false);
+  const [panelMode, setPanelMode] = useState<PanelMode>(null);
+  const [selectedReservation, setSelectedReservation] = useState<Reserva | null>(null);
   const [search, setSearch] = useState("");
   const [statusFiltro, setStatusFiltro] = useState("TODOS");
   const [form, setForm] = useState(emptyForm);
@@ -50,6 +83,7 @@ export function ReservasPage() {
         espacoService.list(),
         instituicaoService.list(),
       ]);
+
       const scopedReservas = filterByInstitution(reservasData, currentUser, (item) => item.idInstituicao);
       const scopedUsuarios = filterByInstitution(usuariosData, currentUser, (item) => item.idInstituicao);
       const scopedEspacos = filterByInstitution(espacosData, currentUser, (item) => item.idInstituicao);
@@ -87,19 +121,32 @@ export function ReservasPage() {
     });
   }, [reservas, usuarios, espacos, search, statusFiltro]);
 
-  const resetForm = () => {
-    setForm({
-      ...emptyForm,
-      idInstituicao: String(currentUser?.idInstituicao ?? instituicoes[0]?.idInstituicao ?? ""),
-      idUsuario: String(currentUser?.idUsuario ?? usuarios[0]?.idUsuario ?? ""),
-      idEspaco: String(espacos[0]?.idEspaco ?? ""),
-    });
-    setShowForm(false);
+  const selectedReservationRelations = useMemo(() => {
+    if (!selectedReservation) {
+      return { usuario: null, espaco: null, instituicao: null };
+    }
+
+    return {
+      usuario: usuarios.find((item) => item.idUsuario === selectedReservation.idUsuario) ?? null,
+      espaco: espacos.find((item) => item.idEspaco === selectedReservation.idEspaco) ?? null,
+      instituicao: instituicoes.find((item) => item.idInstituicao === selectedReservation.idInstituicao) ?? null,
+    };
+  }, [selectedReservation, usuarios, espacos, instituicoes]);
+
+  const closePanels = () => {
+    setPanelMode(null);
+    setSelectedReservation(null);
   };
 
-  const handleEdit = (reservation: Reserva) => {
+  const openQuickReservation = () => {
+    setForm(buildQuickDefaults(currentUser, instituicoes, usuarios, espacos));
+    setPanelMode("quick");
+  };
+
+  const openEditReservation = (reservation: Reserva) => {
     const start = new Date(reservation.dataInicio);
     const end = new Date(reservation.dataFim);
+
     setForm({
       idReserva: String(reservation.idReserva ?? ""),
       titulo: reservation.titulo,
@@ -113,7 +160,7 @@ export function ReservasPage() {
       status: reservation.status ?? "PENDENTE",
       observacao: reservation.observacao ?? "",
     });
-    setShowForm(true);
+    setPanelMode("edit");
   };
 
   const handleDelete = async (idReserva?: number) => {
@@ -126,7 +173,7 @@ export function ReservasPage() {
       toast.success("Reserva removida com sucesso.");
       await loadData();
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Nao foi possivel remover a reserva.");
+      toast.error(error instanceof Error ? error.message : "Não foi possível remover a reserva.");
     }
   };
 
@@ -144,7 +191,7 @@ export function ReservasPage() {
       toast.success("Reserva cancelada com sucesso.");
       await loadData();
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Nao foi possivel cancelar a reserva.");
+      toast.error(error instanceof Error ? error.message : "Não foi possível cancelar a reserva.");
     }
   };
 
@@ -152,34 +199,52 @@ export function ReservasPage() {
     event.preventDefault();
 
     if (!userCanReserve) {
-      toast.error("Seu perfil nao possui permissao para reservar espacos.");
+      toast.error("Seu perfil não possui permissão para reservar espaços.");
       return;
     }
 
-    if (!form.titulo.trim() || !form.data || !form.horaInicio || !form.horaFim) {
-      toast.error("Preencha titulo, data e horarios.");
+    const dataInicio = form.data && form.horaInicio ? `${form.data}T${form.horaInicio}:00` : "";
+    const dataFim = form.data && form.horaFim ? `${form.data}T${form.horaFim}:00` : "";
+    const intervalError = validateReservationInterval(dataInicio, dataFim);
+
+    if (intervalError) {
+      toast.error(intervalError);
       return;
     }
 
-    const dataInicio = `${form.data}T${form.horaInicio}:00`;
-    const dataFim = `${form.data}T${form.horaFim}:00`;
+    if (!form.idEspaco || !form.idInstituicao || !form.idUsuario) {
+      toast.error("Selecione espaço, instituição e responsável válidos.");
+      return;
+    }
 
-    if (new Date(dataFim) <= new Date(dataInicio)) {
-      toast.error("O horario final deve ser maior que o inicial.");
+    const hasConflict = reservas.some((reservation) => {
+      if (reservation.idReserva === Number(form.idReserva || 0)) {
+        return false;
+      }
+
+      return reservation.idEspaco === Number(form.idEspaco)
+        && reservation.status !== "CANCELADA"
+        && new Date(dataInicio) < new Date(reservation.dataFim)
+        && new Date(dataFim) > new Date(reservation.dataInicio);
+    });
+
+    if (hasConflict) {
+      toast.error("Já existe uma reserva para esse espaço no intervalo selecionado.");
       return;
     }
 
     try {
       setSaving(true);
+      const selectedSpace = espacos.find((item) => item.idEspaco === Number(form.idEspaco));
       const payload: Reserva = {
-        titulo: form.titulo.trim(),
+        titulo: form.titulo.trim() || `${panelMode === "quick" ? "Reserva rápida" : "Reserva"} - ${selectedSpace?.nome ?? form.data}`,
         finalidade: form.finalidade.trim(),
         idInstituicao: Number(form.idInstituicao),
         idUsuario: Number(form.idUsuario),
         idEspaco: Number(form.idEspaco),
         dataInicio,
         dataFim,
-        status: form.status,
+        status: panelMode === "quick" ? "CONFIRMADA" : form.status,
         observacao: form.observacao.trim(),
       };
 
@@ -199,18 +264,19 @@ export function ReservasPage() {
         createNotification({
           type: "RESERVA_CRIADA",
           institutionId: created.idInstituicao,
-          title: "Nova reserva criada",
+          title: panelMode === "quick" ? "Reserva rápida criada" : "Nova reserva criada",
           description: `${created.titulo} foi registrada${currentUser?.nome ? ` por ${currentUser.nome}` : ""}.`,
           entityId: created.idReserva,
           actorUserId: currentUser?.idUsuario,
         });
-        toast.success("Reserva criada com sucesso.");
+        toast.success(panelMode === "quick" ? "Reserva rápida criada com sucesso." : "Reserva criada com sucesso.");
       }
 
-      resetForm();
+      closePanels();
+      setForm(emptyForm);
       await loadData();
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Nao foi possivel salvar a reserva.");
+      toast.error(error instanceof Error ? error.message : "Não foi possível salvar a reserva.");
     } finally {
       setSaving(false);
     }
@@ -219,20 +285,20 @@ export function ReservasPage() {
   return (
     <>
       <div className="mb-6">
-        <div className="flex items-center justify-between flex-wrap gap-4">
+        <div className="flex flex-wrap items-center justify-between gap-4">
           <div>
-            <h1 className="text-2xl font-semibold text-gray-900">Reservas</h1>
-            <p className="text-sm text-gray-500 mt-1">Gerencie as reservas visiveis para a sua instituicao</p>
+            <h1 className="text-2xl font-semibold text-gray-900 dark:text-slate-100">Reservas</h1>
+            <p className="mt-1 text-sm text-gray-500 dark:text-slate-400">Gerencie as reservas visíveis para a sua instituição.</p>
           </div>
           {userCanReserve && (
             <div className="flex gap-2">
-              <button onClick={() => { setShowForm(true); resetForm(); }} className="flex items-center gap-2 border border-gray-200 text-gray-700 px-4 py-2.5 rounded-lg hover:bg-gray-50 transition-all shadow-sm">
-                <Plus className="w-4 h-4" />
-                Reserva Rapida
+              <button onClick={openQuickReservation} className="flex items-center gap-2 rounded-lg border border-gray-200 px-4 py-2.5 text-gray-700 shadow-sm transition-all hover:bg-gray-50 dark:border-slate-700 dark:text-slate-200 dark:hover:bg-slate-900">
+                <Plus className="h-4 w-4" />
+                Reserva rápida
               </button>
-              <Link to="/reservas/nova" className="flex items-center gap-2 bg-gradient-to-r from-blue-500 to-blue-600 text-white px-4 py-2.5 rounded-lg hover:from-blue-600 hover:to-blue-700 transition-all shadow-sm">
-                <Plus className="w-4 h-4" />
-                Nova Reserva
+              <Link to="/reservas/nova" className="flex items-center gap-2 rounded-lg bg-gradient-to-r from-blue-500 to-blue-600 px-4 py-2.5 text-white shadow-sm transition-all hover:from-blue-600 hover:to-blue-700">
+                <Plus className="h-4 w-4" />
+                Nova reserva
               </Link>
             </div>
           )}
@@ -240,100 +306,120 @@ export function ReservasPage() {
       </div>
 
       {!userCanReserve && (
-        <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 mb-6 text-sm text-amber-800">
-          Seu acesso permite consultar reservas e espacos disponiveis, mas nao criar novas reservas.
+        <div className="mb-6 rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-800 dark:border-amber-900/60 dark:bg-amber-950/30 dark:text-amber-200">
+          Seu acesso permite consultar reservas e espaços disponíveis, mas não criar novas reservas.
         </div>
       )}
 
-      {showForm && (
-        <div className="bg-white rounded-xl border border-gray-100 p-6 mb-6">
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-lg font-semibold text-gray-900">{form.idReserva ? "Editar reserva" : "Nova reserva"}</h2>
-            <button onClick={resetForm} className="p-2 text-gray-500 hover:bg-gray-100 rounded-lg"><X className="w-4 h-4" /></button>
+      {panelMode && (
+        <div className="mb-6 rounded-xl border border-gray-100 bg-white p-6 dark:border-slate-800 dark:bg-slate-950">
+          <div className="mb-4 flex items-center justify-between">
+            <div>
+              <h2 className="text-lg font-semibold text-gray-900 dark:text-slate-100">
+                {panelMode === "quick" ? "Reserva rápida" : form.idReserva ? "Editar reserva" : "Nova reserva"}
+              </h2>
+              <p className="mt-1 text-sm text-gray-500 dark:text-slate-400">
+                {panelMode === "quick" ? "Preencha apenas os campos essenciais para registrar uma reserva imediatamente." : "Atualize os dados da reserva mantendo o fluxo já existente."}
+              </p>
+            </div>
+            <button onClick={closePanels} className="rounded-lg p-2 text-gray-500 hover:bg-gray-100 dark:text-slate-400 dark:hover:bg-slate-900" type="button">
+              <X className="h-4 w-4" />
+            </button>
           </div>
-          <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <input value={form.titulo} onChange={(event) => setForm((current) => ({ ...current, titulo: event.target.value }))} placeholder="Titulo" className="px-4 py-3 bg-gray-50 border border-gray-200 rounded-lg" />
-            <input value={form.finalidade} onChange={(event) => setForm((current) => ({ ...current, finalidade: event.target.value }))} placeholder="Finalidade" className="px-4 py-3 bg-gray-50 border border-gray-200 rounded-lg" />
-            <select value={form.idInstituicao} onChange={(event) => setForm((current) => ({ ...current, idInstituicao: event.target.value }))} className="px-4 py-3 bg-gray-50 border border-gray-200 rounded-lg" disabled>
+
+          <form onSubmit={handleSubmit} className="grid grid-cols-1 gap-4 md:grid-cols-2">
+            <input value={form.titulo} onChange={(event) => setForm((current) => ({ ...current, titulo: event.target.value }))} placeholder={panelMode === "quick" ? "Título opcional da reserva" : "Título da reserva"} className="rounded-lg border border-gray-200 bg-gray-50 px-4 py-3 text-gray-900 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100" />
+            {panelMode !== "quick" && <input value={form.finalidade} onChange={(event) => setForm((current) => ({ ...current, finalidade: event.target.value }))} placeholder="Finalidade" className="rounded-lg border border-gray-200 bg-gray-50 px-4 py-3 text-gray-900 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100" />}
+            <select value={form.idInstituicao} onChange={(event) => setForm((current) => ({ ...current, idInstituicao: event.target.value }))} className="rounded-lg border border-gray-200 bg-gray-50 px-4 py-3 text-gray-700 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100" disabled>
               {instituicoes.map((item) => <option key={item.idInstituicao} value={item.idInstituicao}>{item.nomeFantasia}</option>)}
             </select>
-            <select value={form.idUsuario} onChange={(event) => setForm((current) => ({ ...current, idUsuario: event.target.value }))} className="px-4 py-3 bg-gray-50 border border-gray-200 rounded-lg" disabled={!platformAdmin}>
+            <select value={form.idUsuario} onChange={(event) => setForm((current) => ({ ...current, idUsuario: event.target.value }))} className="rounded-lg border border-gray-200 bg-gray-50 px-4 py-3 text-gray-700 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100" disabled={!platformAdmin || panelMode === "quick"}>
               {usuarios.map((item) => <option key={item.idUsuario} value={item.idUsuario}>{item.nome}</option>)}
             </select>
-            <select value={form.idEspaco} onChange={(event) => setForm((current) => ({ ...current, idEspaco: event.target.value }))} className="px-4 py-3 bg-gray-50 border border-gray-200 rounded-lg">
+            <select value={form.idEspaco} onChange={(event) => setForm((current) => ({ ...current, idEspaco: event.target.value }))} className="rounded-lg border border-gray-200 bg-gray-50 px-4 py-3 text-gray-700 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100">
               {espacos.map((item) => <option key={item.idEspaco} value={item.idEspaco}>{item.nome}</option>)}
             </select>
-            <select value={form.status} onChange={(event) => setForm((current) => ({ ...current, status: event.target.value as StatusReserva }))} className="px-4 py-3 bg-gray-50 border border-gray-200 rounded-lg">
-              <option value="PENDENTE">Pendente</option>
-              <option value="CONFIRMADA">Confirmada</option>
-              <option value="CANCELADA">Cancelada</option>
-              <option value="CONCLUIDA">Concluida</option>
-            </select>
-            <input type="date" value={form.data} onChange={(event) => setForm((current) => ({ ...current, data: event.target.value }))} className="px-4 py-3 bg-gray-50 border border-gray-200 rounded-lg" />
+            {panelMode !== "quick" && (
+              <select value={form.status} onChange={(event) => setForm((current) => ({ ...current, status: event.target.value as StatusReserva }))} className="rounded-lg border border-gray-200 bg-gray-50 px-4 py-3 text-gray-700 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100">
+                <option value="PENDENTE">Pendente</option>
+                <option value="CONFIRMADA">Confirmada</option>
+                <option value="CANCELADA">Cancelada</option>
+                <option value="CONCLUIDA">Concluída</option>
+              </select>
+            )}
+            <input type="date" value={form.data} onChange={(event) => setForm((current) => ({ ...current, data: event.target.value }))} className="rounded-lg border border-gray-200 bg-gray-50 px-4 py-3 text-gray-700 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100" />
             <div className="grid grid-cols-2 gap-4">
-              <input type="time" value={form.horaInicio} onChange={(event) => setForm((current) => ({ ...current, horaInicio: event.target.value }))} className="px-4 py-3 bg-gray-50 border border-gray-200 rounded-lg" />
-              <input type="time" value={form.horaFim} onChange={(event) => setForm((current) => ({ ...current, horaFim: event.target.value }))} className="px-4 py-3 bg-gray-50 border border-gray-200 rounded-lg" />
+              <input type="time" value={form.horaInicio} onChange={(event) => setForm((current) => ({ ...current, horaInicio: event.target.value }))} className="rounded-lg border border-gray-200 bg-gray-50 px-4 py-3 text-gray-700 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100" />
+              <input type="time" value={form.horaFim} onChange={(event) => setForm((current) => ({ ...current, horaFim: event.target.value }))} className="rounded-lg border border-gray-200 bg-gray-50 px-4 py-3 text-gray-700 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100" />
             </div>
-            <textarea value={form.observacao} onChange={(event) => setForm((current) => ({ ...current, observacao: event.target.value }))} placeholder="Observacao" rows={4} className="px-4 py-3 bg-gray-50 border border-gray-200 rounded-lg md:col-span-2" />
+            {panelMode !== "quick" && <textarea value={form.observacao} onChange={(event) => setForm((current) => ({ ...current, observacao: event.target.value }))} placeholder="Observações" rows={4} className="rounded-lg border border-gray-200 bg-gray-50 px-4 py-3 text-gray-900 md:col-span-2 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100" />}
+            {panelMode === "quick" && (
+              <div className="rounded-xl border border-blue-100 bg-blue-50 px-4 py-4 text-sm text-blue-900 md:col-span-2 dark:border-blue-900/60 dark:bg-blue-950/30 dark:text-blue-100">
+                A reserva rápida usa sua instituição e o seu perfil atual para registrar uma reserva objetiva, com confirmação imediata quando não houver conflito de horário.
+              </div>
+            )}
             <div className="md:col-span-2 flex items-center gap-3">
-              <button type="submit" disabled={saving || !userCanReserve} className="flex items-center gap-2 bg-gradient-to-r from-blue-500 to-blue-600 text-white px-5 py-3 rounded-lg disabled:opacity-70"><Save className="w-4 h-4" />{saving ? "Salvando..." : "Salvar"}</button>
-              <button type="button" onClick={resetForm} className="px-5 py-3 border border-gray-200 rounded-lg text-gray-700">Cancelar</button>
+              <button type="submit" disabled={saving || !userCanReserve} className="flex items-center gap-2 rounded-lg bg-gradient-to-r from-blue-500 to-blue-600 px-5 py-3 text-white disabled:opacity-70">
+                <FileText className="h-4 w-4" />
+                {saving ? "Salvando..." : panelMode === "quick" ? "Confirmar reserva rápida" : "Salvar"}
+              </button>
+              <button type="button" onClick={closePanels} className="rounded-lg border border-gray-200 px-5 py-3 text-gray-700 dark:border-slate-700 dark:text-slate-200">Cancelar</button>
             </div>
           </form>
         </div>
       )}
 
-      <div className="bg-white rounded-xl border border-gray-100 p-4 mb-6">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+      <div className="mb-6 rounded-xl border border-gray-100 bg-white p-4 dark:border-slate-800 dark:bg-slate-950">
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-4">
           <div className="md:col-span-2">
             <div className="relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-              <input value={search} onChange={(event) => setSearch(event.target.value)} type="text" placeholder="Buscar por espaco, responsavel..." className="w-full pl-10 pr-4 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
+              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400 dark:text-slate-500" />
+              <input value={search} onChange={(event) => setSearch(event.target.value)} type="text" placeholder="Buscar por espaço, responsável ou título..." className="w-full rounded-lg border border-gray-200 bg-gray-50 py-2 pl-10 pr-4 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100" />
             </div>
           </div>
           <div>
-            <select value={statusFiltro} onChange={(event) => setStatusFiltro(event.target.value)} className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500">
+            <select value={statusFiltro} onChange={(event) => setStatusFiltro(event.target.value)} className="w-full rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100">
               <option value="TODOS">Todos os status</option>
               <option value="PENDENTE">Pendente</option>
               <option value="CONFIRMADA">Confirmada</option>
               <option value="CANCELADA">Cancelada</option>
-              <option value="CONCLUIDA">Concluida</option>
+              <option value="CONCLUIDA">Concluída</option>
             </select>
           </div>
-          <div className="text-sm text-gray-500 flex items-center">{filtered.length} resultado(s)</div>
+          <div className="flex items-center text-sm text-gray-500 dark:text-slate-400">{filtered.length} resultado(s)</div>
         </div>
       </div>
 
-      <div className="bg-white rounded-xl border border-gray-100 overflow-hidden">
+      <div className="overflow-hidden rounded-xl border border-gray-100 bg-white dark:border-slate-800 dark:bg-slate-950">
         <div className="overflow-x-auto">
           <table className="w-full">
-            <thead className="bg-gray-50 border-b border-gray-100">
+            <thead className="border-b border-gray-100 bg-gray-50 dark:border-slate-800 dark:bg-slate-900">
               <tr>
-                <th className="text-left px-6 py-3 text-xs font-semibold text-gray-600 uppercase tracking-wider">Espaco</th>
-                <th className="text-left px-6 py-3 text-xs font-semibold text-gray-600 uppercase tracking-wider">Responsavel</th>
-                <th className="text-left px-6 py-3 text-xs font-semibold text-gray-600 uppercase tracking-wider">Data</th>
-                <th className="text-left px-6 py-3 text-xs font-semibold text-gray-600 uppercase tracking-wider">Horario</th>
-                <th className="text-left px-6 py-3 text-xs font-semibold text-gray-600 uppercase tracking-wider">Status</th>
-                <th className="text-right px-6 py-3 text-xs font-semibold text-gray-600 uppercase tracking-wider">Acoes</th>
+                <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-600 dark:text-slate-400">Espaço</th>
+                <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-600 dark:text-slate-400">Responsável</th>
+                <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-600 dark:text-slate-400">Data</th>
+                <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-600 dark:text-slate-400">Horário</th>
+                <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-600 dark:text-slate-400">Status</th>
+                <th className="px-6 py-3 text-right text-xs font-semibold uppercase tracking-wider text-gray-600 dark:text-slate-400">Ações</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-100">
+            <tbody className="divide-y divide-gray-100 dark:divide-slate-800">
               {!loading && filtered.map((reservation) => {
                 const usuario = usuarios.find((item) => item.idUsuario === reservation.idUsuario);
                 const espaco = espacos.find((item) => item.idEspaco === reservation.idEspaco);
                 return (
-                  <tr key={reservation.idReserva} className="hover:bg-gray-50 transition-colors">
-                    <td className="px-6 py-4"><div className="text-sm font-medium text-gray-900">{espaco?.nome ?? reservation.titulo}</div></td>
-                    <td className="px-6 py-4"><div className="text-sm text-gray-700">{usuario?.nome ?? "Usuario nao encontrado"}</div></td>
-                    <td className="px-6 py-4"><div className="text-sm text-gray-700">{formatDate(reservation.dataInicio)}</div></td>
-                    <td className="px-6 py-4"><div className="text-sm text-gray-700">{formatTimeRange(reservation.dataInicio, reservation.dataFim)}</div></td>
-                    <td className="px-6 py-4"><span className={`px-2.5 py-1 rounded-md text-xs font-medium border ${getStatusReservaColor(reservation.status)}`}>{getStatusReservaLabel(reservation.status)}</span></td>
+                  <tr key={reservation.idReserva} className="transition-colors hover:bg-gray-50 dark:hover:bg-slate-900/60">
+                    <td className="px-6 py-4"><div className="text-sm font-medium text-gray-900 dark:text-slate-100">{espaco?.nome ?? reservation.titulo}</div></td>
+                    <td className="px-6 py-4"><div className="text-sm text-gray-700 dark:text-slate-300">{usuario?.nome ?? "Usuário não encontrado"}</div></td>
+                    <td className="px-6 py-4"><div className="text-sm text-gray-700 dark:text-slate-300">{formatDate(reservation.dataInicio)}</div></td>
+                    <td className="px-6 py-4"><div className="text-sm text-gray-700 dark:text-slate-300">{formatTimeRange(reservation.dataInicio, reservation.dataFim)}</div></td>
+                    <td className="px-6 py-4"><span className={`rounded-md border px-2.5 py-1 text-xs font-medium ${getStatusReservaColor(reservation.status)}`}>{getStatusReservaLabel(reservation.status)}</span></td>
                     <td className="px-6 py-4">
                       <div className="flex items-center justify-end gap-2">
-                        <button className="p-1.5 text-gray-600 hover:bg-gray-100 rounded transition-colors" title="Visualizar"><Eye className="w-4 h-4" /></button>
-                        {userCanReserve && <button onClick={() => handleEdit(reservation)} className="p-1.5 text-blue-600 hover:bg-blue-50 rounded transition-colors" title="Editar"><Edit2 className="w-4 h-4" /></button>}
-                        {userCanReserve && <button onClick={() => handleCancel(reservation)} className="p-1.5 text-yellow-600 hover:bg-yellow-50 rounded transition-colors" title="Cancelar"><XCircle className="w-4 h-4" /></button>}
-                        {platformAdmin && <button onClick={() => handleDelete(reservation.idReserva)} className="p-1.5 text-red-600 hover:bg-red-50 rounded transition-colors" title="Excluir"><Trash2 className="w-4 h-4" /></button>}
+                        <button onClick={() => setSelectedReservation(reservation)} className="rounded p-1.5 text-gray-600 transition-colors hover:bg-gray-100 dark:text-slate-300 dark:hover:bg-slate-800" title="Visualizar detalhes" type="button"><Eye className="h-4 w-4" /></button>
+                        {userCanReserve && <button onClick={() => openEditReservation(reservation)} className="rounded p-1.5 text-blue-600 transition-colors hover:bg-blue-50 dark:text-blue-300 dark:hover:bg-blue-950/40" title="Editar reserva" type="button"><Edit2 className="h-4 w-4" /></button>}
+                        {userCanReserve && <button onClick={() => handleCancel(reservation)} className="rounded p-1.5 text-yellow-600 transition-colors hover:bg-yellow-50 dark:text-yellow-300 dark:hover:bg-yellow-950/40" title="Cancelar reserva" type="button"><XCircle className="h-4 w-4" /></button>}
+                        {platformAdmin && <button onClick={() => handleDelete(reservation.idReserva)} className="rounded p-1.5 text-red-600 transition-colors hover:bg-red-50 dark:text-red-300 dark:hover:bg-red-950/40" title="Excluir reserva" type="button"><Trash2 className="h-4 w-4" /></button>}
                       </div>
                     </td>
                   </tr>
@@ -343,11 +429,58 @@ export function ReservasPage() {
           </table>
         </div>
 
-        <div className="flex items-center justify-between px-6 py-4 border-t border-gray-100">
-          <div className="text-sm text-gray-600">Mostrando <span className="font-medium">{filtered.length}</span> resultado(s)</div>
+        <div className="flex items-center justify-between border-t border-gray-100 px-6 py-4 dark:border-slate-800">
+          <div className="text-sm text-gray-600 dark:text-slate-400">Mostrando <span className="font-medium">{filtered.length}</span> resultado(s)</div>
         </div>
       </div>
-      {loading && <div className="mt-4 text-sm text-gray-500">Carregando reservas...</div>}
+      {loading && <div className="mt-4 text-sm text-gray-500 dark:text-slate-400">Carregando reservas...</div>}
+
+      {selectedReservation && (
+        <DetailPanel title={selectedReservation.titulo} subtitle="Visualização da reserva em modo de leitura." onClose={() => setSelectedReservation(null)}>
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+            <div className="rounded-xl border border-gray-100 bg-gray-50 p-4 dark:border-slate-800 dark:bg-slate-900">
+              <div className="flex items-center gap-2 text-sm font-medium text-gray-900 dark:text-slate-100"><CalendarRange className="h-4 w-4 text-blue-600 dark:text-blue-300" />Data</div>
+              <div className="mt-2 text-sm text-gray-600 dark:text-slate-300">{formatDate(selectedReservation.dataInicio)}</div>
+            </div>
+            <div className="rounded-xl border border-gray-100 bg-gray-50 p-4 dark:border-slate-800 dark:bg-slate-900">
+              <div className="flex items-center gap-2 text-sm font-medium text-gray-900 dark:text-slate-100"><Clock3 className="h-4 w-4 text-blue-600 dark:text-blue-300" />Horário</div>
+              <div className="mt-2 text-sm text-gray-600 dark:text-slate-300">{formatTimeRange(selectedReservation.dataInicio, selectedReservation.dataFim)}</div>
+            </div>
+            <div className="rounded-xl border border-gray-100 bg-gray-50 p-4 dark:border-slate-800 dark:bg-slate-900">
+              <div className="text-sm font-medium text-gray-900 dark:text-slate-100">Espaço</div>
+              <div className="mt-2 text-sm text-gray-600 dark:text-slate-300">{selectedReservationRelations.espaco?.nome ?? "Espaço não encontrado"}</div>
+            </div>
+            <div className="rounded-xl border border-gray-100 bg-gray-50 p-4 dark:border-slate-800 dark:bg-slate-900">
+              <div className="flex items-center gap-2 text-sm font-medium text-gray-900 dark:text-slate-100"><User2 className="h-4 w-4 text-blue-600 dark:text-blue-300" />Responsável</div>
+              <div className="mt-2 text-sm text-gray-600 dark:text-slate-300">{selectedReservationRelations.usuario?.nome ?? "Usuário não encontrado"}</div>
+            </div>
+          </div>
+
+          <div className="mt-4 grid grid-cols-1 gap-4 md:grid-cols-2">
+            <div className="rounded-xl border border-gray-100 bg-white p-4 dark:border-slate-800 dark:bg-slate-950">
+              <div className="text-sm font-medium text-gray-900 dark:text-slate-100">Instituição</div>
+              <div className="mt-2 text-sm text-gray-600 dark:text-slate-300">{selectedReservationRelations.instituicao?.nomeFantasia ?? "Instituição não encontrada"}</div>
+            </div>
+            <div className="rounded-xl border border-gray-100 bg-white p-4 dark:border-slate-800 dark:bg-slate-950">
+              <div className="text-sm font-medium text-gray-900 dark:text-slate-100">Status</div>
+              <div className="mt-2"><span className={`rounded-md border px-2.5 py-1 text-xs font-medium ${getStatusReservaColor(selectedReservation.status)}`}>{getStatusReservaLabel(selectedReservation.status)}</span></div>
+            </div>
+          </div>
+
+          {(selectedReservation.finalidade || selectedReservation.observacao) && (
+            <div className="mt-4 grid grid-cols-1 gap-4 md:grid-cols-2">
+              <div className="rounded-xl border border-gray-100 bg-white p-4 dark:border-slate-800 dark:bg-slate-950">
+                <div className="text-sm font-medium text-gray-900 dark:text-slate-100">Finalidade</div>
+                <div className="mt-2 text-sm text-gray-600 dark:text-slate-300">{selectedReservation.finalidade || "Não informada."}</div>
+              </div>
+              <div className="rounded-xl border border-gray-100 bg-white p-4 dark:border-slate-800 dark:bg-slate-950">
+                <div className="text-sm font-medium text-gray-900 dark:text-slate-100">Observações</div>
+                <div className="mt-2 text-sm text-gray-600 dark:text-slate-300">{selectedReservation.observacao || "Nenhuma observação registrada."}</div>
+              </div>
+            </div>
+          )}
+        </DetailPanel>
+      )}
     </>
   );
 }
