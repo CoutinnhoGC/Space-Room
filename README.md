@@ -9,7 +9,7 @@ SpaceRoom é uma plataforma moderna e intuitiva que permite:
 - Visualizar disponibilidade dos ambientes em tempo real
 - Criar, editar e cancelar reservas
 - Controlar usuários vinculados a instituições
-- Organizar o uso dos espaços de forma eficiente
+- Organizar o uso dos espaços de forma eficiente.
 
 ## 🚀 Tecnologias
 
