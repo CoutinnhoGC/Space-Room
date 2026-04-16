@@ -1,4 +1,4 @@
-import { Building2, Calendar, CalendarDays, ChevronLeft, ChevronRight, Home, LayoutDashboard, MapPin, Settings, Users, BarChart3 } from "lucide-react";
+Ôªøimport { Building2, Calendar, CalendarDays, ChevronLeft, ChevronRight, Home, LayoutDashboard, MapPin, Settings, Users, BarChart3 } from "lucide-react";
 import { Link } from "react-router";
 
 interface SidebarProps {
@@ -13,29 +13,29 @@ const menuSections = [
   {
     title: "Principal",
     items: [
-      { id: "inicio", label: "InÌcio", icon: Home, path: "/" },
+      { id: "inicio", label: "In√≠cio", icon: Home, path: "/" },
       { id: "dashboard", label: "Dashboard", icon: LayoutDashboard, path: "/dashboard" },
       { id: "reservas", label: "Reservas", icon: Calendar, path: "/reservas" },
-      { id: "espacos", label: "EspaÁos", icon: MapPin, path: "/espacos" },
+      { id: "espacos", label: "Espa√ßos", icon: MapPin, path: "/espacos" },
     ],
   },
   {
-    title: "Gest„o",
+    title: "Gest√£o",
     items: [
-      { id: "usuarios", label: "Usu·rios", icon: Users, path: "/usuarios" },
-      { id: "instituicoes", label: "InstituiÁıes", icon: Building2, path: "/instituicoes" },
+      { id: "usuarios", label: "Usu√°rios", icon: Users, path: "/usuarios" },
+      { id: "instituicoes", label: "Institui√ß√µes", icon: Building2, path: "/instituicoes" },
     ],
   },
   {
     title: "Agenda",
     items: [
-      { id: "calendario", label: "Calend·rio", icon: CalendarDays, path: "/calendario" },
-      { id: "relatorios", label: "RelatÛrios", icon: BarChart3, path: "/relatorios" },
+      { id: "calendario", label: "Calend√°rio", icon: CalendarDays, path: "/calendario" },
+      { id: "relatorios", label: "Relat√≥rios", icon: BarChart3, path: "/relatorios" },
     ],
   },
   {
     title: "Sistema",
-    items: [{ id: "configuracoes", label: "ConfiguraÁıes", icon: Settings, path: "/configuracoes" }],
+    items: [{ id: "configuracoes", label: "Configura√ß√µes", icon: Settings, path: "/configuracoes" }],
   },
 ];
 
@@ -96,7 +96,7 @@ export function Sidebar({ isOpen, collapsed, activeItem, onItemClick, onToggleCo
         </nav>
 
         <div className="border-t border-gray-100 p-4 dark:border-slate-800">
-          <div className="text-center text-xs text-gray-400 dark:text-slate-500">{collapsed ? "v1.1" : "SpaceRoom v1.1"}</div>
+          <div className="text-center text-xs text-gray-400 dark:text-slate-500">{collapsed ? "V2" : "Space 1 V2"}</div>
         </div>
       </aside>
     </>

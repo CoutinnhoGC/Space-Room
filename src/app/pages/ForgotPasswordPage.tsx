@@ -99,7 +99,7 @@ export function ForgotPasswordPage() {
           </div>
         </div>
 
-        <div className="text-center mt-6 text-sm text-gray-500">SpaceRoom v1.0</div>
+        <div className="text-center mt-6 text-sm text-gray-500">Space 1 V2</div>
       </div>
     </div>
   );

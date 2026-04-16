@@ -1,4 +1,4 @@
-import { FormEvent, useEffect, useMemo, useState } from "react";
+Ôªøimport { FormEvent, useEffect, useMemo, useState } from "react";
 import { Eye, Mail, Plus, Save, Search, Shield, Trash2, UserCheck, UserRound, X, Edit2 } from "lucide-react";
 import { toast } from "sonner";
 import { DetailPanel } from "../components/DetailPanel";
@@ -67,7 +67,7 @@ export function UsuariosPage() {
           : inferDefaultReservationPermission(Number(current.idCargo || cargoId), Number(current.idInstituicao || institutionId), cargosData, instituicoesData),
       }));
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Erro ao carregar usu·rios.");
+      toast.error(error instanceof Error ? error.message : "Erro ao carregar usu√°rios.");
     } finally {
       setLoading(false);
     }
@@ -124,16 +124,16 @@ export function UsuariosPage() {
   };
 
   const handleDelete = async (idUsuario?: number) => {
-    if (!idUsuario) {
+    if (!idUsuario || !window.confirm("Deseja confirmar a exclus√£o deste usu√°rio?")) {
       return;
     }
 
     try {
       await usuarioService.remove(idUsuario);
-      toast.success("Usu·rio removido com sucesso.");
+      toast.success("Usu√°rio removido com sucesso.");
       await loadData();
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : "N„o foi possÌvel remover o usu·rio.");
+      toast.error(error instanceof Error ? error.message : "N√£o foi poss√≠vel remover o usu√°rio.");
     }
   };
 
@@ -165,19 +165,19 @@ export function UsuariosPage() {
     event.preventDefault();
 
     if (!form.nome.trim() || !form.email.trim()) {
-      toast.error("Nome e e-mail s„o obrigatÛrios.");
+      toast.error("Nome e e-mail s√£o obrigat√≥rios.");
       return;
     }
 
     if (!isValidEmail(form.email)) {
-      toast.error("Informe um e-mail v·lido.");
+      toast.error("Informe um e-mail v√°lido.");
       return;
     }
 
-    const instituicaoError = validatePositiveId(Number(form.idInstituicao), "InstituiÁ„o");
+    const instituicaoError = validatePositiveId(Number(form.idInstituicao), "Institui√ß√£o");
     const cargoError = validatePositiveId(Number(form.idCargo), "Cargo");
     if (instituicaoError || cargoError) {
-      toast.error(instituicaoError || cargoError || "IDs inv·lidos.");
+      toast.error(instituicaoError || cargoError || "IDs inv√°lidos.");
       return;
     }
 
@@ -196,16 +196,16 @@ export function UsuariosPage() {
 
       if (form.idUsuario) {
         await usuarioService.update(Number(form.idUsuario), { ...payload, idUsuario: Number(form.idUsuario) });
-        toast.success("Usu·rio atualizado com sucesso.");
+        toast.success("Usu√°rio atualizado com sucesso.");
       } else {
         await usuarioService.create(payload);
-        toast.success("Usu·rio criado com sucesso.");
+        toast.success("Usu√°rio criado com sucesso.");
       }
 
       resetForm();
       await loadData();
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : "N„o foi possÌvel salvar o usu·rio.");
+      toast.error(error instanceof Error ? error.message : "N√£o foi poss√≠vel salvar o usu√°rio.");
     } finally {
       setSaving(false);
     }
@@ -218,12 +218,12 @@ export function UsuariosPage() {
       <div className="mb-6">
         <div className="flex flex-wrap items-center justify-between gap-4">
           <div>
-            <h1 className="text-2xl font-semibold text-gray-900 dark:text-slate-100">Usu·rios</h1>
-            <p className="mt-1 text-sm text-gray-500 dark:text-slate-400">Gerencie os usu·rios da sua instituiÁ„o e escolha quem pode reservar.</p>
+            <h1 className="text-2xl font-semibold text-gray-900 dark:text-slate-100">Usu√°rios</h1>
+            <p className="mt-1 text-sm text-gray-500 dark:text-slate-400">Gerencie os usu√°rios da sua institui√ß√£o e escolha quem pode reservar.</p>
           </div>
           <button onClick={openNewUserForm} className="flex items-center gap-2 rounded-lg bg-gradient-to-r from-blue-500 to-blue-600 px-4 py-2.5 text-white shadow-sm transition-all hover:from-blue-600 hover:to-blue-700">
             <Plus className="h-4 w-4" />
-            Novo usu·rio
+            Novo usu√°rio
           </button>
         </div>
       </div>
@@ -232,8 +232,8 @@ export function UsuariosPage() {
         <div className="mb-6 rounded-xl border border-gray-100 bg-white p-6 dark:border-slate-800 dark:bg-slate-950">
           <div className="mb-4 flex items-center justify-between">
             <div>
-              <h2 className="text-lg font-semibold text-gray-900 dark:text-slate-100">{form.idUsuario ? "Editar usu·rio" : "Novo usu·rio"}</h2>
-              <p className="mt-1 text-sm text-gray-500 dark:text-slate-400">No cadastro, o usu·rio j· entra ativo por padr„o. O status sÛ aparece em ediÁ„o.</p>
+              <h2 className="text-lg font-semibold text-gray-900 dark:text-slate-100">{form.idUsuario ? "Editar usu√°rio" : "Novo usu√°rio"}</h2>
+              <p className="mt-1 text-sm text-gray-500 dark:text-slate-400">No cadastro, o usu√°rio j√° entra ativo por padr√£o. O status s√≥ aparece em edi√ß√£o.</p>
             </div>
             <button onClick={resetForm} className="rounded-lg p-2 text-gray-500 hover:bg-gray-100 dark:text-slate-400 dark:hover:bg-slate-900" type="button">
               <X className="h-4 w-4" />
@@ -252,15 +252,15 @@ export function UsuariosPage() {
             {form.idUsuario && (
               <label className="flex items-center gap-2 rounded-lg border border-gray-200 bg-gray-50 px-4 py-3 text-sm text-gray-700 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200">
                 <input type="checkbox" checked={form.ativo} onChange={(event) => setForm((current) => ({ ...current, ativo: event.target.checked }))} />
-                Usu·rio ativo
+                Usu√°rio ativo
               </label>
             )}
             <label className="flex items-center gap-2 rounded-lg border border-gray-200 bg-gray-50 px-4 py-3 text-sm text-gray-700 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200">
               <input type="checkbox" checked={form.podeReservar} onChange={(event) => setForm((current) => ({ ...current, podeReservar: event.target.checked }))} />
-              Pode reservar espaÁos
+              Pode reservar espa√ßos
             </label>
             <div className="text-xs text-gray-500 md:col-span-2 dark:text-slate-400">
-              Cargos como diretor, vice, docente, dono e gerente recebem permiss„o de reserva por padr„o. Aqui vocÍ pode liberar ou bloquear individualmente.
+              Cargos como diretor, vice, docente, dono e gerente recebem permiss√£o de reserva por padr√£o. Aqui voc√™ pode liberar ou bloquear individualmente.
             </div>
             <div className="md:col-span-2 flex items-center gap-3">
               <button type="submit" disabled={saving} className="flex items-center gap-2 rounded-lg bg-gradient-to-r from-blue-500 to-blue-600 px-5 py-3 text-white disabled:opacity-70">
@@ -276,7 +276,7 @@ export function UsuariosPage() {
       <div className="mb-6 rounded-xl border border-gray-100 bg-white p-4 dark:border-slate-800 dark:bg-slate-950">
         <div className="relative">
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400 dark:text-slate-500" />
-          <input type="text" value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Buscar usu·rios..." className="w-full rounded-lg border border-gray-200 bg-gray-50 py-2 pl-10 pr-4 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100" />
+          <input type="text" value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Buscar usu√°rios..." className="w-full rounded-lg border border-gray-200 bg-gray-50 py-2 pl-10 pr-4 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100" />
         </div>
       </div>
 
@@ -286,10 +286,10 @@ export function UsuariosPage() {
             <tr>
               <th className="px-6 py-3 text-left text-xs font-semibold uppercase text-gray-600 dark:text-slate-400">Nome</th>
               <th className="px-6 py-3 text-left text-xs font-semibold uppercase text-gray-600 dark:text-slate-400">E-mail</th>
-              <th className="px-6 py-3 text-left text-xs font-semibold uppercase text-gray-600 dark:text-slate-400">FunÁ„o</th>
+              <th className="px-6 py-3 text-left text-xs font-semibold uppercase text-gray-600 dark:text-slate-400">Fun√ß√£o</th>
               <th className="px-6 py-3 text-left text-xs font-semibold uppercase text-gray-600 dark:text-slate-400">Reserva</th>
               <th className="px-6 py-3 text-left text-xs font-semibold uppercase text-gray-600 dark:text-slate-400">Status</th>
-              <th className="px-6 py-3 text-right text-xs font-semibold uppercase text-gray-600 dark:text-slate-400">AÁıes</th>
+              <th className="px-6 py-3 text-right text-xs font-semibold uppercase text-gray-600 dark:text-slate-400">A√ß√µes</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-100 dark:divide-slate-800">
@@ -309,9 +309,9 @@ export function UsuariosPage() {
                   <td className="px-6 py-4"><span className={`rounded-md px-2.5 py-1 text-xs font-medium ${user.ativo === false ? "bg-gray-100 text-gray-700 dark:bg-slate-800 dark:text-slate-300" : "bg-green-50 text-green-700 dark:bg-green-950/40 dark:text-green-300"}`}>{user.ativo === false ? "Inativo" : "Ativo"}</span></td>
                   <td className="px-6 py-4">
                     <div className="flex items-center justify-end gap-2">
-                      <button onClick={() => setSelectedUser(user)} className="rounded p-1.5 text-gray-600 hover:bg-gray-100 dark:text-slate-300 dark:hover:bg-slate-800" title="Visualizar usu·rio" type="button"><Eye className="h-4 w-4" /></button>
-                      <button onClick={() => handleEdit(user)} className="rounded p-1.5 text-blue-600 hover:bg-blue-50 dark:text-blue-300 dark:hover:bg-blue-950/40" title="Editar usu·rio" type="button"><Edit2 className="h-4 w-4" /></button>
-                      <button onClick={() => handleDelete(user.idUsuario)} className="rounded p-1.5 text-red-600 hover:bg-red-50 dark:text-red-300 dark:hover:bg-red-950/40" title="Excluir usu·rio" type="button"><Trash2 className="h-4 w-4" /></button>
+                      <button onClick={() => setSelectedUser(user)} className="rounded p-1.5 text-gray-600 hover:bg-gray-100 dark:text-slate-300 dark:hover:bg-slate-800" title="Visualizar usu√°rio" type="button"><Eye className="h-4 w-4" /></button>
+                      <button onClick={() => handleEdit(user)} className="rounded p-1.5 text-blue-600 hover:bg-blue-50 dark:text-blue-300 dark:hover:bg-blue-950/40" title="Editar usu√°rio" type="button"><Edit2 className="h-4 w-4" /></button>
+                      <button onClick={() => handleDelete(user.idUsuario)} className="rounded p-1.5 text-red-600 hover:bg-red-50 dark:text-red-300 dark:hover:bg-red-950/40" title="Excluir usu√°rio" type="button"><Trash2 className="h-4 w-4" /></button>
                     </div>
                   </td>
                 </tr>
@@ -319,36 +319,36 @@ export function UsuariosPage() {
             })}
           </tbody>
         </table>
-        {loading && <div className="p-6 text-sm text-gray-500 dark:text-slate-400">Carregando usu·rios...</div>}
-        {!loading && filteredUsers.length === 0 && <div className="p-6 text-sm text-gray-500 dark:text-slate-400">Nenhum usu·rio encontrado.</div>}
+        {loading && <div className="p-6 text-sm text-gray-500 dark:text-slate-400">Carregando usu√°rios...</div>}
+        {!loading && filteredUsers.length === 0 && <div className="p-6 text-sm text-gray-500 dark:text-slate-400">Nenhum usu√°rio encontrado.</div>}
       </div>
 
       {selectedUser && (
-        <DetailPanel title={selectedUser.nome} subtitle="VisualizaÁ„o do usu·rio em modo de leitura." onClose={() => setSelectedUser(null)}>
+        <DetailPanel title={selectedUser.nome} subtitle="Visualiza√ß√£o do usu√°rio em modo de leitura." onClose={() => setSelectedUser(null)}>
           <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
             <div className="rounded-xl border border-gray-100 bg-gray-50 p-4 dark:border-slate-800 dark:bg-slate-900">
               <div className="flex items-center gap-2 text-sm font-medium text-gray-900 dark:text-slate-100"><Mail className="h-4 w-4 text-blue-600 dark:text-blue-300" />E-mail</div>
               <div className="mt-2 text-sm text-gray-600 dark:text-slate-300">{selectedUser.email}</div>
             </div>
             <div className="rounded-xl border border-gray-100 bg-gray-50 p-4 dark:border-slate-800 dark:bg-slate-900">
-              <div className="flex items-center gap-2 text-sm font-medium text-gray-900 dark:text-slate-100"><Shield className="h-4 w-4 text-blue-600 dark:text-blue-300" />FunÁ„o</div>
-              <div className="mt-2 text-sm text-gray-600 dark:text-slate-300">{selectedUserRelations.cargo?.nome ?? "N„o informada"}</div>
+              <div className="flex items-center gap-2 text-sm font-medium text-gray-900 dark:text-slate-100"><Shield className="h-4 w-4 text-blue-600 dark:text-blue-300" />Fun√ß√£o</div>
+              <div className="mt-2 text-sm text-gray-600 dark:text-slate-300">{selectedUserRelations.cargo?.nome ?? "N√£o informada"}</div>
             </div>
             <div className="rounded-xl border border-gray-100 bg-white p-4 dark:border-slate-800 dark:bg-slate-950">
-              <div className="text-sm font-medium text-gray-900 dark:text-slate-100">InstituiÁ„o</div>
-              <div className="mt-2 text-sm text-gray-600 dark:text-slate-300">{selectedUserRelations.instituicao?.nomeFantasia ?? "N„o informada"}</div>
+              <div className="text-sm font-medium text-gray-900 dark:text-slate-100">Institui√ß√£o</div>
+              <div className="mt-2 text-sm text-gray-600 dark:text-slate-300">{selectedUserRelations.instituicao?.nomeFantasia ?? "N√£o informada"}</div>
             </div>
             <div className="rounded-xl border border-gray-100 bg-white p-4 dark:border-slate-800 dark:bg-slate-950">
-              <div className="text-sm font-medium text-gray-900 dark:text-slate-100">Permiss„o de reserva</div>
-              <div className="mt-2 text-sm text-gray-600 dark:text-slate-300">{selectedUser.podeReservar ? "Pode reservar espaÁos" : "Somente consulta"}</div>
+              <div className="text-sm font-medium text-gray-900 dark:text-slate-100">Permiss√£o de reserva</div>
+              <div className="mt-2 text-sm text-gray-600 dark:text-slate-300">{selectedUser.podeReservar ? "Pode reservar espa√ßos" : "Somente consulta"}</div>
             </div>
             <div className="rounded-xl border border-gray-100 bg-white p-4 dark:border-slate-800 dark:bg-slate-950">
               <div className="flex items-center gap-2 text-sm font-medium text-gray-900 dark:text-slate-100"><UserCheck className="h-4 w-4 text-blue-600 dark:text-blue-300" />Status</div>
-              <div className="mt-2 text-sm text-gray-600 dark:text-slate-300">{selectedUser.ativo === false ? "Usu·rio inativo" : "Usu·rio ativo"}</div>
+              <div className="mt-2 text-sm text-gray-600 dark:text-slate-300">{selectedUser.ativo === false ? "Usu√°rio inativo" : "Usu√°rio ativo"}</div>
             </div>
             <div className="rounded-xl border border-gray-100 bg-white p-4 dark:border-slate-800 dark:bg-slate-950">
               <div className="flex items-center gap-2 text-sm font-medium text-gray-900 dark:text-slate-100"><UserRound className="h-4 w-4 text-blue-600 dark:text-blue-300" />Primeiro acesso</div>
-              <div className="mt-2 text-sm text-gray-600 dark:text-slate-300">{selectedUser.primeiroAcesso ? "Pendente" : "ConcluÌdo"}</div>
+              <div className="mt-2 text-sm text-gray-600 dark:text-slate-300">{selectedUser.primeiroAcesso ? "Pendente" : "Conclu√≠do"}</div>
             </div>
           </div>
         </DetailPanel>
@@ -356,3 +356,4 @@ export function UsuariosPage() {
     </>
   );
 }
+

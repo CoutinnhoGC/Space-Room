@@ -1,5 +1,5 @@
+﻿import { BarChart3, Calendar, Download, FileText, TrendingUp } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
-import { Download, Calendar, FileText, TrendingUp, BarChart3 } from "lucide-react";
 import { toast } from "sonner";
 import { espacoService } from "../services/espacoService";
 import { instituicaoService } from "../services/instituicaoService";
@@ -29,18 +29,13 @@ export function RelatoriosPage() {
     const load = async () => {
       try {
         setError(null);
-        const [reservasData, usuariosData, espacosData, instituicoesData] = await Promise.all([
-          reservaService.list(),
-          usuarioService.list(),
-          espacoService.list(),
-          instituicaoService.list(),
-        ]);
+        const [reservasData, usuariosData, espacosData, instituicoesData] = await Promise.all([reservaService.list(), usuarioService.list(), espacoService.list(), instituicaoService.list()]);
         setReservas(reservasData);
         setUsuarios(usuariosData);
         setEspacos(espacosData);
         setInstituicoes(instituicoesData);
       } catch (err) {
-        const message = err instanceof Error ? err.message : "Erro ao carregar relatorios.";
+        const message = err instanceof Error ? err.message : "Erro ao carregar relatórios.";
         setError(message);
         toast.error(message);
       }
@@ -49,97 +44,34 @@ export function RelatoriosPage() {
     load();
   }, []);
 
-  const reservasFiltradas = useMemo(() => {
-    if (filtroInstituicao === "TODAS") {
-      return reservas;
-    }
-
-    return reservas.filter((item) => String(item.idInstituicao) === filtroInstituicao);
-  }, [reservas, filtroInstituicao]);
+  const reservasFiltradas = useMemo(() => filtroInstituicao === "TODAS" ? reservas : reservas.filter((item) => String(item.idInstituicao) === filtroInstituicao), [reservas, filtroInstituicao]);
 
   const reports = [
-    {
-      id: 1,
-      title: "Relatorio de Reservas",
-      description: "Exporta reservas com espaco, usuario, data e status.",
-      icon: TrendingUp,
-      color: "blue",
-      onClick: () => {
-        const lines = ["id,titulo,idUsuario,idEspaco,dataInicio,dataFim,status"];
-        reservasFiltradas.forEach((item) => lines.push(`${item.idReserva},${item.titulo},${item.idUsuario},${item.idEspaco},${item.dataInicio},${item.dataFim},${item.status}`));
-        downloadCsv("reservas.csv", lines);
-        toast.success("Relatorio de reservas gerado.");
-      },
-    },
-    {
-      id: 2,
-      title: "Reservas por Instituicao",
-      description: "Resumo consolidado por instituicao.",
-      icon: BarChart3,
-      color: "purple",
-      onClick: () => {
-        const lines = ["instituicao,total_reservas"];
-        instituicoes.forEach((instituicao) => {
-          const total = reservas.filter((item) => item.idInstituicao === instituicao.idInstituicao).length;
-          lines.push(`${instituicao.nomeFantasia},${total}`);
-        });
-        downloadCsv("reservas-por-instituicao.csv", lines);
-        toast.success("Relatorio por instituicao gerado.");
-      },
-    },
-    {
-      id: 3,
-      title: "Usuarios Mais Ativos",
-      description: "Ranking de usuarios com mais reservas.",
-      icon: FileText,
-      color: "green",
-      onClick: () => {
-        const lines = ["usuario,total_reservas"];
-        usuarios.forEach((usuario) => {
-          const total = reservas.filter((item) => item.idUsuario === usuario.idUsuario).length;
-          lines.push(`${usuario.nome},${total}`);
-        });
-        downloadCsv("usuarios-ativos.csv", lines);
-        toast.success("Relatorio de usuarios gerado.");
-      },
-    },
-    {
-      id: 4,
-      title: "Espacos Utilizados",
-      description: "Uso dos espacos cadastrados.",
-      icon: Calendar,
-      color: "orange",
-      onClick: () => {
-        const lines = ["espaco,total_reservas"];
-        espacos.forEach((espaco) => {
-          const total = reservas.filter((item) => item.idEspaco === espaco.idEspaco).length;
-          lines.push(`${espaco.nome},${total}`);
-        });
-        downloadCsv("espacos-utilizados.csv", lines);
-        toast.success("Relatorio de espacos gerado.");
-      },
-    },
+    { id: 1, title: "Relatório de reservas", description: "Exporta reservas com espaço, usuário, data e status.", icon: TrendingUp, color: "blue", onClick: () => { const lines = ["id,titulo,idUsuario,idEspaco,dataInicio,dataFim,status"]; reservasFiltradas.forEach((item) => lines.push(`${item.idReserva},${item.titulo},${item.idUsuario},${item.idEspaco},${item.dataInicio},${item.dataFim},${item.status}`)); downloadCsv("reservas.csv", lines); toast.success("Relatório de reservas gerado."); } },
+    { id: 2, title: "Reservas por instituição", description: "Resumo consolidado por instituição.", icon: BarChart3, color: "purple", onClick: () => { const lines = ["instituicao,total_reservas"]; instituicoes.forEach((instituicao) => { const total = reservas.filter((item) => item.idInstituicao === instituicao.idInstituicao).length; lines.push(`${instituicao.nomeFantasia},${total}`); }); downloadCsv("reservas-por-instituicao.csv", lines); toast.success("Relatório por instituição gerado."); } },
+    { id: 3, title: "Usuários mais ativos", description: "Ranking de usuários com mais reservas.", icon: FileText, color: "green", onClick: () => { const lines = ["usuario,total_reservas"]; usuarios.forEach((usuario) => { const total = reservas.filter((item) => item.idUsuario === usuario.idUsuario).length; lines.push(`${usuario.nome},${total}`); }); downloadCsv("usuarios-ativos.csv", lines); toast.success("Relatório de usuários gerado."); } },
+    { id: 4, title: "Espaços utilizados", description: "Uso dos espaços cadastrados.", icon: Calendar, color: "orange", onClick: () => { const lines = ["espaco,total_reservas"]; espacos.forEach((espaco) => { const total = reservas.filter((item) => item.idEspaco === espaco.idEspaco).length; lines.push(`${espaco.nome},${total}`); }); downloadCsv("espacos-utilizados.csv", lines); toast.success("Relatório de espaços gerado."); } },
   ];
 
   const totalReservas = reservasFiltradas.length;
   const ocupacaoMedia = espacos.length === 0 ? 0 : Math.round((new Set(reservasFiltradas.map((item) => item.idEspaco)).size / espacos.length) * 100);
 
   if (error) {
-    return <div className="bg-white border border-red-100 text-red-700 rounded-xl p-6 text-sm">{error}</div>;
+    return <div className="rounded-xl border border-red-100 bg-white p-6 text-sm text-red-700 dark:border-red-900/60 dark:bg-slate-950 dark:text-red-300">{error}</div>;
   }
 
   return (
     <>
       <div className="mb-6">
-        <h1 className="text-2xl font-semibold text-gray-900">Relatorios</h1>
-        <p className="text-sm text-gray-500 mt-1">Gere e exporte relatorios do sistema</p>
+        <h1 className="text-2xl font-semibold text-gray-900 dark:text-slate-100">Relatórios</h1>
+        <p className="mt-1 text-sm text-gray-500 dark:text-slate-400">Gere e exporte relatórios do sistema.</p>
       </div>
 
-      <div className="bg-white rounded-xl border border-gray-100 p-4 mb-6">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div className="mb-6 rounded-xl border border-gray-100 bg-white p-4 dark:border-slate-800 dark:bg-slate-950">
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
           <div>
-            <label className="block text-xs font-medium text-gray-600 mb-1.5">Instituicao</label>
-            <select value={filtroInstituicao} onChange={(event) => setFiltroInstituicao(event.target.value)} className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+            <label className="mb-1.5 block text-xs font-medium text-gray-600 dark:text-slate-400">Instituição</label>
+            <select value={filtroInstituicao} onChange={(event) => setFiltroInstituicao(event.target.value)} className="w-full rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100">
               <option value="TODAS">Todas</option>
               {instituicoes.map((instituicao) => <option key={instituicao.idInstituicao} value={instituicao.idInstituicao}>{instituicao.nomeFantasia}</option>)}
             </select>
@@ -147,37 +79,18 @@ export function RelatoriosPage() {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
         {reports.map((report) => {
           const Icon = report.icon;
-          const colorClasses = {
-            blue: { bg: "bg-blue-50", text: "text-blue-600", button: "bg-blue-500 hover:bg-blue-600" },
-            purple: { bg: "bg-purple-50", text: "text-purple-600", button: "bg-purple-500 hover:bg-purple-600" },
-            green: { bg: "bg-green-50", text: "text-green-600", button: "bg-green-500 hover:bg-green-600" },
-            orange: { bg: "bg-orange-50", text: "text-orange-600", button: "bg-orange-500 hover:bg-orange-600" },
-          }[report.color as "blue" | "purple" | "green" | "orange"];
-
-          return (
-            <div key={report.id} className="bg-white border border-gray-100 rounded-xl p-6 hover:shadow-md transition-shadow">
-              <div className="flex items-start gap-4">
-                <div className={`${colorClasses.bg} p-3 rounded-lg flex-shrink-0`}><Icon className={`w-6 h-6 ${colorClasses.text}`} /></div>
-                <div className="flex-1">
-                  <h3 className="font-semibold text-gray-900 mb-1">{report.title}</h3>
-                  <p className="text-sm text-gray-500 mb-4">{report.description}</p>
-                  <button onClick={report.onClick} className={`flex items-center gap-2 ${colorClasses.button} text-white px-4 py-2 rounded-lg transition-colors text-sm font-medium`}>
-                    <Download className="w-4 h-4" />Gerar Relatorio
-                  </button>
-                </div>
-              </div>
-            </div>
-          );
+          const colorClasses = { blue: { bg: "bg-blue-50 dark:bg-blue-950/30", text: "text-blue-600 dark:text-blue-300", button: "bg-blue-500 hover:bg-blue-600" }, purple: { bg: "bg-purple-50 dark:bg-purple-950/30", text: "text-purple-600 dark:text-purple-300", button: "bg-purple-500 hover:bg-purple-600" }, green: { bg: "bg-green-50 dark:bg-green-950/30", text: "text-green-600 dark:text-green-300", button: "bg-green-500 hover:bg-green-600" }, orange: { bg: "bg-orange-50 dark:bg-orange-950/30", text: "text-orange-600 dark:text-orange-300", button: "bg-orange-500 hover:bg-orange-600" } }[report.color as "blue" | "purple" | "green" | "orange"];
+          return <div key={report.id} className="rounded-xl border border-gray-100 bg-white p-6 transition-shadow hover:shadow-md dark:border-slate-800 dark:bg-slate-950"><div className="flex items-start gap-4"><div className={`${colorClasses.bg} rounded-lg p-3`}><Icon className={`h-6 w-6 ${colorClasses.text}`} /></div><div className="flex-1"><h3 className="mb-1 font-semibold text-gray-900 dark:text-slate-100">{report.title}</h3><p className="mb-4 text-sm text-gray-500 dark:text-slate-400">{report.description}</p><button onClick={report.onClick} className={`flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-medium text-white transition-colors ${colorClasses.button}`}><Download className="h-4 w-4" />Gerar relatório</button></div></div></div>;
         })}
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-6">
-        <div className="bg-white border border-gray-100 rounded-xl p-6"><div className="text-3xl font-semibold text-gray-900 mb-1">{totalReservas}</div><div className="text-sm text-gray-500">Total de Reservas</div></div>
-        <div className="bg-white border border-gray-100 rounded-xl p-6"><div className="text-3xl font-semibold text-gray-900 mb-1">{ocupacaoMedia}%</div><div className="text-sm text-gray-500">Taxa de Ocupacao Media</div></div>
-        <div className="bg-white border border-gray-100 rounded-xl p-6"><div className="text-3xl font-semibold text-gray-900 mb-1">{espacos.length}</div><div className="text-sm text-gray-500">Espacos Cadastrados</div></div>
+      <div className="mt-6 grid grid-cols-1 gap-6 md:grid-cols-3">
+        <div className="rounded-xl border border-gray-100 bg-white p-6 dark:border-slate-800 dark:bg-slate-950"><div className="mb-1 text-3xl font-semibold text-gray-900 dark:text-slate-100">{totalReservas}</div><div className="text-sm text-gray-500 dark:text-slate-400">Total de reservas</div></div>
+        <div className="rounded-xl border border-gray-100 bg-white p-6 dark:border-slate-800 dark:bg-slate-950"><div className="mb-1 text-3xl font-semibold text-gray-900 dark:text-slate-100">{ocupacaoMedia}%</div><div className="text-sm text-gray-500 dark:text-slate-400">Taxa de ocupação média</div></div>
+        <div className="rounded-xl border border-gray-100 bg-white p-6 dark:border-slate-800 dark:bg-slate-950"><div className="mb-1 text-3xl font-semibold text-gray-900 dark:text-slate-100">{espacos.length}</div><div className="text-sm text-gray-500 dark:text-slate-400">Espaços cadastrados</div></div>
       </div>
     </>
   );
