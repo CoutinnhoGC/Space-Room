@@ -100,6 +100,14 @@ export interface ApiProblem {
   status?: number;
 }
 
+export interface PasswordRecoveryResponse {
+  message: string;
+  email: string;
+  deliveryMode: string;
+  recoveryToken: string;
+  expiresAt: string;
+}
+
 export interface AppNotification {
   id: string;
   type: NotificationType;

@@ -1,29 +1,31 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { Outlet, useLocation } from "react-router";
-import { Sidebar } from "./Sidebar";
 import { Header } from "./Header";
+import { Sidebar } from "./Sidebar";
 
 export function Layout() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const location = useLocation();
 
-  const getActiveItem = () => {
-    const path = location.pathname.split("/")[1] || "dashboard";
-    return path;
-  };
+  const activeItem = useMemo(() => {
+    const segment = location.pathname.split("/")[1];
+    return segment || "inicio";
+  }, [location.pathname]);
 
   return (
     <div className="flex min-h-screen bg-gray-50">
       <Sidebar
         isOpen={sidebarOpen}
-        activeItem={getActiveItem()}
+        collapsed={sidebarCollapsed}
+        activeItem={activeItem}
         onItemClick={() => setSidebarOpen(false)}
+        onToggleCollapse={() => setSidebarCollapsed((current) => !current)}
       />
 
-      <div className="flex-1 flex flex-col min-w-0">
-        <Header onMenuToggle={() => setSidebarOpen(!sidebarOpen)} />
-
-        <main className="flex-1 p-4 lg:p-6 overflow-auto">
+      <div className="flex min-w-0 flex-1 flex-col">
+        <Header onMenuToggle={() => setSidebarOpen((current) => !current)} />
+        <main className="flex-1 overflow-y-auto p-4 lg:p-6">
           <Outlet />
         </main>
       </div>
