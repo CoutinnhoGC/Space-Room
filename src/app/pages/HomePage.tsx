@@ -233,7 +233,7 @@ export function HomePage() {
                   <div className="flex items-start justify-between gap-3">
                     <div>
                       <div className="font-medium text-gray-900">{reservation.titulo}</div>
-                      <div className="mt-1 text-sm text-gray-500">{formatDate(reservation.dataInicio)} • {formatTimeRange(reservation.dataInicio, reservation.dataFim)}</div>
+                      <div className="mt-1 text-sm text-gray-500">{formatDate(reservation.dataInicio)} ï¿½ {formatTimeRange(reservation.dataInicio, reservation.dataFim)}</div>
                     </div>
                     <span className={`rounded-md border px-2.5 py-1 text-xs font-medium ${getStatusReservaColor(reservation.status)}`}>
                       {getStatusReservaLabel(reservation.status)}
