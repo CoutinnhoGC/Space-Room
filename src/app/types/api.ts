@@ -67,6 +67,7 @@ export interface Usuario {
 export interface Espaco {
   idEspaco?: number;
   idInstituicao: number;
+  idEspacoPai?: number | null;
   nome: string;
   descricao?: string | null;
   tipo: TipoEspaco;
@@ -74,6 +75,7 @@ export interface Espaco {
   capacidade: number;
   recursosFixos?: string | null;
   imagemUrl?: string | null;
+  permiteSubespacos?: boolean | null;
   ativo?: boolean | null;
   criadoEm?: string;
   atualizadoEm?: string;
@@ -84,6 +86,7 @@ export interface Reserva {
   idInstituicao: number;
   idUsuario: number;
   idEspaco: number;
+  idSubespaco?: number | null;
   titulo: string;
   finalidade?: string | null;
   dataInicio: string;
@@ -124,6 +127,14 @@ export interface NotificationPreferences {
   novasReservas: boolean;
   alteracoesReserva: boolean;
   novosEspacos: boolean;
+}
+
+export interface MuralMessage {
+  id: string;
+  institutionId: number;
+  message: string;
+  authorName: string;
+  createdAt: string;
 }
 
 export interface DashboardMetrics {

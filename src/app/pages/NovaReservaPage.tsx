@@ -1,16 +1,19 @@
 import { FormEvent, useEffect, useMemo, useState } from "react";
-import { Calendar, Clock, MapPin, User, Building2, AlertCircle, CheckCircle } from "lucide-react";
+import { AlertCircle, Building2, Calendar, CheckCircle, Clock, Layers3, MapPin, User } from "lucide-react";
 import { Link, useNavigate } from "react-router";
 import { toast } from "sonner";
 import { createNotification } from "../lib/notifications";
 import { canReserve, filterByInstitution } from "../lib/permissions";
 import { getCurrentUser } from "../lib/session";
+import { getParentSpaces, getReservationSpaceLabel, getSubspacesForSpace, hasReservationConflict } from "../lib/reservationUtils";
 import { validateReservationInterval } from "../lib/validators";
 import { instituicaoService } from "../services/instituicaoService";
 import { espacoService } from "../services/espacoService";
 import { reservaService } from "../services/reservaService";
 import { usuarioService } from "../services/usuarioService";
 import type { Espaco, Instituicao, Reserva, Usuario } from "../types/api";
+
+const inputClassName = "w-full rounded-lg border border-gray-200 bg-gray-50 px-4 py-3 text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:placeholder:text-slate-500";
 
 export function NovaReservaPage() {
   const navigate = useNavigate();
@@ -25,6 +28,7 @@ export function NovaReservaPage() {
   const [form, setForm] = useState({
     idInstituicao: "",
     idEspaco: "",
+    idSubespaco: "",
     data: "",
     horaInicio: "",
     horaFim: "",
@@ -48,6 +52,7 @@ export function NovaReservaPage() {
         const scopedSpaces = filterByInstitution(espacosData, currentUser, (item) => item.idInstituicao);
         const scopedUsers = filterByInstitution(usuariosData, currentUser, (item) => item.idInstituicao);
         const scopedReservations = filterByInstitution(reservasData, currentUser, (item) => item.idInstituicao);
+        const parentSpaces = getParentSpaces(scopedSpaces, currentUser?.idInstituicao ?? scopedInstitutions[0]?.idInstituicao);
 
         setInstituicoes(scopedInstitutions);
         setEspacos(scopedSpaces);
@@ -57,10 +62,11 @@ export function NovaReservaPage() {
           ...current,
           idInstituicao: current.idInstituicao || String(currentUser?.idInstituicao ?? scopedInstitutions[0]?.idInstituicao ?? ""),
           idUsuario: String(currentUser?.idUsuario ?? scopedUsers[0]?.idUsuario ?? ""),
-          idEspaco: current.idEspaco || String(scopedSpaces[0]?.idEspaco ?? ""),
+          idEspaco: current.idEspaco || String(parentSpaces[0]?.idEspaco ?? ""),
+          idSubespaco: "",
         }));
       } catch (error) {
-        toast.error(error instanceof Error ? error.message : "Nao foi possivel carregar dados para a reserva.");
+        toast.error(error instanceof Error ? error.message : "Não foi possível carregar dados para a reserva.");
       } finally {
         setLoading(false);
       }
@@ -69,14 +75,10 @@ export function NovaReservaPage() {
     load();
   }, [currentUser?.idInstituicao, currentUser?.idUsuario]);
 
-  const selectedInstitutionSpaces = useMemo(() => {
-    return espacos.filter((item) => String(item.idInstituicao) === form.idInstituicao);
-  }, [espacos, form.idInstituicao]);
-
-  const responsibleUser = useMemo(
-    () => usuarios.find((item) => item.idUsuario === Number(form.idUsuario)),
-    [usuarios, form.idUsuario],
-  );
+  const selectedInstitutionSpaces = useMemo(() => getParentSpaces(espacos, form.idInstituicao), [espacos, form.idInstituicao]);
+  const availableSubspaces = useMemo(() => getSubspacesForSpace(espacos, form.idEspaco), [espacos, form.idEspaco]);
+  const selectedSpace = useMemo(() => espacos.find((item) => item.idEspaco === Number(form.idEspaco)) ?? null, [espacos, form.idEspaco]);
+  const responsibleUser = useMemo(() => usuarios.find((item) => item.idUsuario === Number(form.idUsuario)), [usuarios, form.idUsuario]);
 
   const dataInicio = form.data && form.horaInicio ? `${form.data}T${form.horaInicio}:00` : "";
   const dataFim = form.data && form.horaFim ? `${form.data}T${form.horaFim}:00` : "";
@@ -85,19 +87,24 @@ export function NovaReservaPage() {
       return false;
     }
 
-    return reservas.some((reserva) =>
-      reserva.idEspaco === Number(form.idEspaco) &&
-      reserva.status !== "CANCELADA" &&
-      new Date(dataInicio) < new Date(reserva.dataFim) &&
-      new Date(dataFim) > new Date(reserva.dataInicio),
-    );
-  }, [reservas, form.idEspaco, dataInicio, dataFim]);
+    return hasReservationConflict({
+      idEspaco: Number(form.idEspaco),
+      idSubespaco: form.idSubespaco ? Number(form.idSubespaco) : null,
+      dataInicio,
+      dataFim,
+    }, reservas);
+  }, [reservas, form.idEspaco, form.idSubespaco, dataInicio, dataFim]);
 
   const handleSubmit = async (event: FormEvent) => {
     event.preventDefault();
 
     if (!userCanReserve) {
-      toast.error("Seu perfil nao possui permissao para reservar espacos.");
+      toast.error("Seu perfil não possui permissão para reservar espaços.");
+      return;
+    }
+
+    if (!form.titulo.trim() || !form.finalidade.trim()) {
+      toast.error("Título e finalidade são obrigatórios.");
       return;
     }
 
@@ -108,12 +115,12 @@ export function NovaReservaPage() {
     }
 
     if (!form.idInstituicao || !form.idEspaco || !form.idUsuario) {
-      toast.error("Selecione instituicao, espaco e responsavel validos.");
+      toast.error("Selecione instituição, espaço e responsável válidos.");
       return;
     }
 
     if (showConflict) {
-      toast.error("Ja existe uma reserva para esse espaco no intervalo escolhido.");
+      toast.error("Já existe uma reserva para esse espaço ou subespaço no intervalo escolhido.");
       return;
     }
 
@@ -123,7 +130,8 @@ export function NovaReservaPage() {
         idInstituicao: Number(form.idInstituicao),
         idUsuario: Number(form.idUsuario),
         idEspaco: Number(form.idEspaco),
-        titulo: form.titulo.trim() || `Reserva ${form.data}`,
+        idSubespaco: form.idSubespaco ? Number(form.idSubespaco) : null,
+        titulo: form.titulo.trim(),
         finalidade: form.finalidade.trim(),
         observacao: form.observacao.trim(),
         dataInicio,
@@ -141,7 +149,7 @@ export function NovaReservaPage() {
       toast.success("Reserva criada com sucesso.");
       navigate("/reservas");
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Nao foi possivel criar a reserva.");
+      toast.error(error instanceof Error ? error.message : "Não foi possível criar a reserva.");
     } finally {
       setSaving(false);
     }
@@ -150,125 +158,138 @@ export function NovaReservaPage() {
   return (
     <>
       <div className="mb-6">
-        <div className="flex items-center gap-2 text-sm text-gray-500 mb-2">
-          <Link to="/reservas" className="hover:text-blue-600">Reservas</Link>
+        <div className="mb-2 flex items-center gap-2 text-sm text-gray-500 dark:text-slate-400">
+          <Link to="/reservas" className="hover:text-blue-600 dark:hover:text-blue-300">Reservas</Link>
           <span>/</span>
-          <span className="text-gray-900">Nova Reserva</span>
+          <span className="text-gray-900 dark:text-slate-100">Nova reserva</span>
         </div>
-        <h1 className="text-2xl font-semibold text-gray-900">Nova Reserva</h1>
-        <p className="text-sm text-gray-500 mt-1">Preencha os dados abaixo para criar uma nova reserva</p>
+        <h1 className="text-2xl font-semibold text-gray-900 dark:text-slate-100">Nova reserva</h1>
+        <p className="mt-1 text-sm text-gray-500 dark:text-slate-400">Preencha os dados abaixo para criar uma nova reserva.</p>
       </div>
 
       {!userCanReserve && (
-        <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 mb-6 text-sm text-amber-800">
-          Seu usuario esta configurado apenas para consultar reservas e espacos disponiveis. Fale com o responsavel da instituicao para liberar reservas no seu perfil.
+        <div className="mb-6 rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-800 dark:border-amber-900/60 dark:bg-amber-950/30 dark:text-amber-200">
+          Seu usuário está configurado apenas para consultar reservas e espaços disponíveis. Fale com a gestão da instituição para liberar reservas no seu perfil.
         </div>
       )}
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
         <div className="lg:col-span-2">
-          <div className="bg-white rounded-xl border border-gray-100 p-6">
+          <div className="rounded-xl border border-gray-100 bg-white p-6 dark:border-slate-800 dark:bg-slate-950">
             <form className="space-y-6" onSubmit={handleSubmit}>
               <div>
-                <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-2"><Building2 className="w-4 h-4" />Instituicao</label>
-                <select value={form.idInstituicao} onChange={(event) => setForm((current) => ({ ...current, idInstituicao: event.target.value, idEspaco: "" }))} className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-lg text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent" disabled>
+                <label className="mb-2 flex items-center gap-2 text-sm font-medium text-gray-700 dark:text-slate-300"><Building2 className="h-4 w-4" />Instituição</label>
+                <select value={form.idInstituicao} onChange={(event) => setForm((current) => ({ ...current, idInstituicao: event.target.value, idEspaco: "", idSubespaco: "" }))} className={inputClassName} disabled>
                   {instituicoes.map((instituicao) => <option key={instituicao.idInstituicao} value={instituicao.idInstituicao}>{instituicao.nomeFantasia}</option>)}
                 </select>
               </div>
 
-              <div>
-                <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-2"><MapPin className="w-4 h-4" />Espaco</label>
-                <select value={form.idEspaco} onChange={(event) => setForm((current) => ({ ...current, idEspaco: event.target.value }))} className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-lg text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
-                  <option value="">Selecione um espaco</option>
-                  {selectedInstitutionSpaces.map((space) => <option key={space.idEspaco} value={space.idEspaco}>{space.nome} (Cap. {space.capacidade})</option>)}
-                </select>
+              <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                <div>
+                  <label className="mb-2 flex items-center gap-2 text-sm font-medium text-gray-700 dark:text-slate-300"><MapPin className="h-4 w-4" />Espaço <span className="text-red-500">*</span></label>
+                  <select value={form.idEspaco} onChange={(event) => setForm((current) => ({ ...current, idEspaco: event.target.value, idSubespaco: "" }))} className={inputClassName}>
+                    <option value="">Selecione um espaço</option>
+                    {selectedInstitutionSpaces.map((space) => <option key={space.idEspaco} value={space.idEspaco}>{space.nome} (Cap. {space.capacidade})</option>)}
+                  </select>
+                </div>
+
+                {availableSubspaces.length > 0 && (
+                  <div>
+                    <label className="mb-2 flex items-center gap-2 text-sm font-medium text-gray-700 dark:text-slate-300"><Layers3 className="h-4 w-4" />Subespaço</label>
+                    <select value={form.idSubespaco} onChange={(event) => setForm((current) => ({ ...current, idSubespaco: event.target.value }))} className={inputClassName}>
+                      <option value="">Reservar o espaço completo</option>
+                      {availableSubspaces.map((space) => <option key={space.idEspaco} value={space.idEspaco}>{space.nome}</option>)}
+                    </select>
+                  </div>
+                )}
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Titulo da reserva</label>
-                <input value={form.titulo} onChange={(event) => setForm((current) => ({ ...current, titulo: event.target.value }))} type="text" placeholder="Ex: Aula especial de laboratorio" className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-lg text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent" />
+                <label className="mb-2 block text-sm font-medium text-gray-700 dark:text-slate-300">Título da reserva <span className="text-red-500">*</span></label>
+                <input value={form.titulo} maxLength={150} onChange={(event) => setForm((current) => ({ ...current, titulo: event.target.value }))} type="text" placeholder="Ex.: Aula especial de laboratório" className={inputClassName} />
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
                 <div>
-                  <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-2"><Calendar className="w-4 h-4" />Data</label>
-                  <input type="date" value={form.data} onChange={(event) => setForm((current) => ({ ...current, data: event.target.value }))} className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-lg text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent" />
+                  <label className="mb-2 flex items-center gap-2 text-sm font-medium text-gray-700 dark:text-slate-300"><Calendar className="h-4 w-4 text-blue-600 dark:text-blue-300" />Data <span className="text-red-500">*</span></label>
+                  <input type="date" value={form.data} onChange={(event) => setForm((current) => ({ ...current, data: event.target.value }))} className={inputClassName} />
                 </div>
                 <div>
-                  <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-2"><Clock className="w-4 h-4" />Horario Inicio</label>
-                  <input type="time" value={form.horaInicio} onChange={(event) => setForm((current) => ({ ...current, horaInicio: event.target.value }))} className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-lg text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent" />
+                  <label className="mb-2 flex items-center gap-2 text-sm font-medium text-gray-700 dark:text-slate-300"><Clock className="h-4 w-4 text-blue-600 dark:text-blue-300" />Horário inicial <span className="text-red-500">*</span></label>
+                  <input type="time" value={form.horaInicio} onChange={(event) => setForm((current) => ({ ...current, horaInicio: event.target.value }))} className={inputClassName} />
                 </div>
                 <div>
-                  <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-2"><Clock className="w-4 h-4" />Horario Fim</label>
-                  <input type="time" value={form.horaFim} onChange={(event) => setForm((current) => ({ ...current, horaFim: event.target.value }))} className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-lg text-gray-700 focus:border-transparent focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                  <label className="mb-2 flex items-center gap-2 text-sm font-medium text-gray-700 dark:text-slate-300"><Clock className="h-4 w-4 text-blue-600 dark:text-blue-300" />Horário final <span className="text-red-500">*</span></label>
+                  <input type="time" value={form.horaFim} onChange={(event) => setForm((current) => ({ ...current, horaFim: event.target.value }))} className={inputClassName} />
                 </div>
               </div>
 
               <div>
-                <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-2"><User className="w-4 h-4" />Responsavel</label>
-                <select value={form.idUsuario} onChange={(event) => setForm((current) => ({ ...current, idUsuario: event.target.value }))} className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-lg text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent" disabled>
+                <label className="mb-2 flex items-center gap-2 text-sm font-medium text-gray-700 dark:text-slate-300"><User className="h-4 w-4" />Responsável</label>
+                <select value={form.idUsuario} onChange={(event) => setForm((current) => ({ ...current, idUsuario: event.target.value }))} className={inputClassName} disabled>
                   {usuarios.map((usuario) => <option key={usuario.idUsuario} value={usuario.idUsuario}>{usuario.nome}</option>)}
                 </select>
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Descricao / Finalidade</label>
-                <textarea value={form.finalidade} onChange={(event) => setForm((current) => ({ ...current, finalidade: event.target.value }))} rows={4} placeholder="Descreva a finalidade da reserva" className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-lg text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none" />
+                <label className="mb-2 block text-sm font-medium text-gray-700 dark:text-slate-300">Finalidade <span className="text-red-500">*</span></label>
+                <textarea value={form.finalidade} maxLength={500} onChange={(event) => setForm((current) => ({ ...current, finalidade: event.target.value }))} rows={4} placeholder="Descreva a finalidade da reserva" className={`${inputClassName} resize-none`} />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Observacao</label>
-                <textarea value={form.observacao} onChange={(event) => setForm((current) => ({ ...current, observacao: event.target.value }))} rows={3} placeholder="Observacoes adicionais" className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-lg text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none" />
+                <label className="mb-2 block text-sm font-medium text-gray-700 dark:text-slate-300">Observações</label>
+                <textarea value={form.observacao} maxLength={500} onChange={(event) => setForm((current) => ({ ...current, observacao: event.target.value }))} rows={3} placeholder="Observações adicionais" className={`${inputClassName} resize-none`} />
               </div>
 
               {showConflict && (
-                <div className="flex items-start gap-3 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
-                  <AlertCircle className="w-5 h-5 text-yellow-600 flex-shrink-0 mt-0.5" />
+                <div className="flex items-start gap-3 rounded-lg border border-yellow-200 bg-yellow-50 p-4 dark:border-yellow-900/60 dark:bg-yellow-950/30">
+                  <AlertCircle className="mt-0.5 h-5 w-5 flex-shrink-0 text-yellow-600 dark:text-yellow-300" />
                   <div className="flex-1">
-                    <h4 className="text-sm font-medium text-yellow-900 mb-1">Conflito de Horario Detectado</h4>
-                    <p className="text-sm text-yellow-700">Este espaco ja possui uma reserva para o horario selecionado. Escolha outro horario ou outro espaco.</p>
+                    <h4 className="mb-1 text-sm font-medium text-yellow-900 dark:text-yellow-100">Conflito de horário detectado</h4>
+                    <p className="text-sm text-yellow-700 dark:text-yellow-200">Este espaço ou subespaço já possui uma reserva para o horário selecionado.</p>
                   </div>
                 </div>
               )}
 
-              <div className="flex items-center gap-3 pt-4 border-t border-gray-100">
-                <button type="submit" disabled={saving || loading || !userCanReserve} className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-lg font-medium hover:from-blue-600 hover:to-blue-700 transition-all shadow-sm disabled:opacity-70">
-                  <CheckCircle className="w-4 h-4" />
-                  {saving ? "Confirmando..." : "Confirmar Reserva"}
+              <div className="flex items-center gap-3 border-t border-gray-100 pt-4 dark:border-slate-800">
+                <button type="submit" disabled={saving || loading || !userCanReserve} className="flex items-center gap-2 rounded-lg bg-gradient-to-r from-blue-500 to-blue-600 px-6 py-3 font-medium text-white shadow-sm transition-all hover:from-blue-600 hover:to-blue-700 disabled:opacity-70">
+                  <CheckCircle className="h-4 w-4" />
+                  {saving ? "Confirmando..." : "Confirmar reserva"}
                 </button>
-                <Link to="/reservas" className="px-6 py-3 border border-gray-200 text-gray-700 rounded-lg font-medium hover:bg-gray-50 transition-colors">Cancelar</Link>
+                <Link to="/reservas" className="rounded-lg border border-gray-200 px-6 py-3 font-medium text-gray-700 transition-colors hover:bg-gray-50 dark:border-slate-700 dark:text-slate-200 dark:hover:bg-slate-900">Cancelar</Link>
               </div>
             </form>
           </div>
         </div>
 
         <div className="space-y-4">
-          <div className="bg-blue-50 border border-blue-100 rounded-xl p-5">
-            <h3 className="text-sm font-semibold text-blue-900 mb-3">Dicas para Reservar</h3>
-            <ul className="space-y-2 text-sm text-blue-700">
-              <li>Verifique a disponibilidade antes de confirmar.</li>
-              <li>A reserva sempre fica vinculada a sua instituicao.</li>
-              <li>Conflitos de horario sao bloqueados no frontend e no backend.</li>
+          <div className="rounded-xl border border-blue-100 bg-blue-50 p-5 dark:border-blue-900/60 dark:bg-blue-950/30">
+            <h3 className="mb-3 text-sm font-semibold text-blue-900 dark:text-blue-100">Dicas para reservar</h3>
+            <ul className="space-y-2 text-sm text-blue-700 dark:text-blue-200">
+              <li>Se houver subespaços, você pode reservar apenas a área necessária.</li>
+              <li>Ao deixar o subespaço em branco, a reserva ocupa o espaço principal por completo.</li>
+              <li>Conflitos de horário são validados no frontend e no backend.</li>
             </ul>
           </div>
 
-          <div className="bg-white border border-gray-100 rounded-xl p-5">
-            <h3 className="text-sm font-semibold text-gray-900 mb-3">Resumo</h3>
-            <div className="space-y-2 text-sm text-gray-600">
-              <div>Responsavel: {responsibleUser?.nome ?? "Nao definido"}</div>
+          <div className="rounded-xl border border-gray-100 bg-white p-5 dark:border-slate-800 dark:bg-slate-950">
+            <h3 className="mb-3 text-sm font-semibold text-gray-900 dark:text-slate-100">Resumo</h3>
+            <div className="space-y-2 text-sm text-gray-600 dark:text-slate-300">
+              <div>Responsável: {responsibleUser?.nome ?? "Não definido"}</div>
               <div>Perfil: {userCanReserve ? "Pode reservar" : "Somente consulta"}</div>
+              {selectedSpace && <div>Seleção: {getReservationSpaceLabel({ idInstituicao: Number(form.idInstituicao || 0), idUsuario: Number(form.idUsuario || 0), idEspaco: Number(form.idEspaco || 0), idSubespaco: form.idSubespaco ? Number(form.idSubespaco) : null, titulo: "", dataInicio: dataInicio || new Date().toISOString(), dataFim: dataFim || new Date().toISOString() }, espacos)}</div>}
             </div>
           </div>
 
-          <div className="bg-white border border-gray-100 rounded-xl p-5">
-            <h3 className="text-sm font-semibold text-gray-900 mb-3">Espacos da Instituicao</h3>
+          <div className="rounded-xl border border-gray-100 bg-white p-5 dark:border-slate-800 dark:bg-slate-950">
+            <h3 className="mb-3 text-sm font-semibold text-gray-900 dark:text-slate-100">Espaços da instituição</h3>
             <div className="space-y-2">
-              {selectedInstitutionSpaces.slice(0, 5).map((space) => (
-                <button key={space.idEspaco} onClick={() => setForm((current) => ({ ...current, idEspaco: String(space.idEspaco ?? "") }))} className="w-full text-left px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 rounded-lg transition-colors">
+              {selectedInstitutionSpaces.slice(0, 6).map((space) => (
+                <button key={space.idEspaco} type="button" onClick={() => setForm((current) => ({ ...current, idEspaco: String(space.idEspaco ?? ""), idSubespaco: "" }))} className="w-full rounded-lg px-3 py-2 text-left text-sm text-gray-700 transition-colors hover:bg-gray-50 dark:text-slate-200 dark:hover:bg-slate-900">
                   {space.nome}
                 </button>
               ))}
-              {selectedInstitutionSpaces.length === 0 && <div className="text-sm text-gray-500">Nenhum espaco encontrado para a instituicao selecionada.</div>}
+              {selectedInstitutionSpaces.length === 0 && <div className="text-sm text-gray-500 dark:text-slate-400">Nenhum espaço encontrado para a instituição selecionada.</div>}
             </div>
           </div>
         </div>

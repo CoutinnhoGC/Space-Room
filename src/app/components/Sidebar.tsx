@@ -1,4 +1,4 @@
-﻿import { Building2, Calendar, CalendarDays, ChevronLeft, ChevronRight, Home, LayoutDashboard, MapPin, Settings, Users, BarChart3 } from "lucide-react";
+import { Building2, Calendar, CalendarDays, ChevronLeft, ChevronRight, Home, LayoutDashboard, MapPin, Settings, Users, BarChart3 } from "lucide-react";
 import { Link } from "react-router";
 
 interface SidebarProps {
@@ -96,7 +96,7 @@ export function Sidebar({ isOpen, collapsed, activeItem, onItemClick, onToggleCo
         </nav>
 
         <div className="border-t border-gray-100 p-4 dark:border-slate-800">
-          <div className="text-center text-xs text-gray-400 dark:text-slate-500">{collapsed ? "V2" : "Space 1 V2"}</div>
+          <div className="text-center text-xs text-gray-400 dark:text-slate-500">{collapsed ? "V2.1" : "SpaceRoom V2.1"}</div>
         </div>
       </aside>
     </>
