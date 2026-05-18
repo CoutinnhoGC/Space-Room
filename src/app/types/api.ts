@@ -76,6 +76,10 @@ export interface Espaco {
   recursosFixos?: string | null;
   imagemUrl?: string | null;
   permiteSubespacos?: boolean | null;
+  bloqueiaSubespacos?: boolean | null;
+  bloqueadoPorSubespacos?: boolean | null;
+  hierarchyPath?: string | null;
+  hierarchyLevel?: number | null;
   ativo?: boolean | null;
   criadoEm?: string;
   atualizadoEm?: string;

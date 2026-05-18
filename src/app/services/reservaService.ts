@@ -1,5 +1,20 @@
 import { apiRequest } from "../lib/api";
+import { isPlatformAdmin } from "../lib/permissions";
+import { getCurrentUser } from "../lib/session";
 import type { Reserva } from "../types/api";
+
+function sanitizeReservaPayload(payload: Reserva) {
+  const currentUser = getCurrentUser();
+  if (!currentUser || isPlatformAdmin(currentUser)) {
+    return payload;
+  }
+
+  return {
+    ...payload,
+    idInstituicao: currentUser.idInstituicao,
+    idUsuario: currentUser.idUsuario ?? payload.idUsuario,
+  };
+}
 
 export const reservaService = {
   list: () => apiRequest<Reserva[]>("/reservas"),
@@ -7,12 +22,12 @@ export const reservaService = {
   create: (payload: Reserva) =>
     apiRequest<Reserva>("/reservas", {
       method: "POST",
-      body: JSON.stringify(payload),
+      body: JSON.stringify(sanitizeReservaPayload(payload)),
     }),
   update: (id: number, payload: Reserva) =>
     apiRequest<Reserva>(`/reservas/${id}`, {
       method: "PUT",
-      body: JSON.stringify(payload),
+      body: JSON.stringify(sanitizeReservaPayload(payload)),
     }),
   remove: (id: number) =>
     apiRequest<void>(`/reservas/${id}`, {

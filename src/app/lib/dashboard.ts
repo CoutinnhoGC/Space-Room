@@ -6,7 +6,8 @@ import { isReservaAtivaAgora, isReservaHoje } from "./formatters";
 export function buildDashboardMetrics(reservas: Reserva[], espacos: Espaco[], usuarios: Usuario[]): DashboardMetrics {
   const now = new Date();
   const totalEspacos = espacos.length;
-  const espacosOcupadosAgora = reservas.filter((item) => item.status !== "CANCELADA" && isReservaAtivaAgora(item, now)).length;
+  const occupiedSpaceIds = new Set(reservas.filter((item) => item.status !== "CANCELADA" && isReservaAtivaAgora(item, now)).map((item) => item.idSubespaco ?? item.idEspaco));
+  const espacosOcupadosAgora = occupiedSpaceIds.size;
   const reservasHoje = reservas.filter((item) => item.status !== "CANCELADA" && isReservaHoje(item, now)).length;
   const reservasPendentes = reservas.filter((item) => item.status === "PENDENTE").length;
   const espacosDisponiveis = Math.max(totalEspacos - espacosOcupadosAgora, 0);

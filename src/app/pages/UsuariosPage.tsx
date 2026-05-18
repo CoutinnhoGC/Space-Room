@@ -3,7 +3,7 @@ import { Eye, Mail, Plus, Save, Search, Shield, Trash2, UserCheck, UserRound, X,
 import { toast } from "sonner";
 import { DetailPanel } from "../components/DetailPanel";
 import { getInitials } from "../lib/formatters";
-import { filterByInstitution, inferDefaultReservationPermission, isPlatformAdmin } from "../lib/permissions";
+import { canChooseInstitution, filterByInstitution, inferDefaultReservationPermission, isPlatformAdmin } from "../lib/permissions";
 import { getCurrentUser } from "../lib/session";
 import { isValidEmail, validatePositiveId } from "../lib/validators";
 import { cargoService } from "../services/cargoService";
@@ -212,6 +212,7 @@ export function UsuariosPage() {
   };
 
   const platformAdmin = isPlatformAdmin(currentUser);
+  const showInstitutionSelector = canChooseInstitution(currentUser, visibleInstitutions.length);
 
   return (
     <>
@@ -246,9 +247,9 @@ export function UsuariosPage() {
             <select value={form.idCargo} onChange={(event) => handleInstitutionOrRoleChange({ idCargo: event.target.value })} className="rounded-lg border border-gray-200 bg-gray-50 px-4 py-3 text-gray-700 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100">
               {cargos.map((cargo) => <option key={cargo.idCargo} value={cargo.idCargo}>{cargo.nome}</option>)}
             </select>
-            <select value={form.idInstituicao} onChange={(event) => handleInstitutionOrRoleChange({ idInstituicao: event.target.value })} className="rounded-lg border border-gray-200 bg-gray-50 px-4 py-3 text-gray-700 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100" disabled={!platformAdmin}>
+            {showInstitutionSelector ? <select value={form.idInstituicao} onChange={(event) => handleInstitutionOrRoleChange({ idInstituicao: event.target.value })} className="rounded-lg border border-gray-200 bg-gray-50 px-4 py-3 text-gray-700 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100" disabled={!platformAdmin}>
               {visibleInstitutions.map((instituicao) => <option key={instituicao.idInstituicao} value={instituicao.idInstituicao}>{instituicao.nomeFantasia}</option>)}
-            </select>
+            </select> : <div className="rounded-lg border border-gray-200 bg-gray-50 px-4 py-3 text-sm text-gray-700 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200">{visibleInstitutions[0]?.nomeFantasia ?? "Instituição atual"}</div>}
             {form.idUsuario && (
               <label className="flex items-center gap-2 rounded-lg border border-gray-200 bg-gray-50 px-4 py-3 text-sm text-gray-700 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200">
                 <input type="checkbox" checked={form.ativo} onChange={(event) => setForm((current) => ({ ...current, ativo: event.target.checked }))} />

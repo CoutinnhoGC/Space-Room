@@ -50,6 +50,18 @@ export function canManageInstitutions(user: Usuario | null | undefined) {
   return isPlatformAdmin(user);
 }
 
+export function canChooseInstitution(user: Usuario | null | undefined, institutionCount = 1) {
+  return isPlatformAdmin(user) || institutionCount > 1;
+}
+
+export function getAccessibleInstitutionId(user: Usuario | null | undefined, requestedInstitutionId?: number | null) {
+  if (isPlatformAdmin(user)) {
+    return requestedInstitutionId ?? user?.idInstituicao ?? null;
+  }
+
+  return user?.idInstituicao ?? requestedInstitutionId ?? null;
+}
+
 export function canReserve(user: Usuario | null | undefined) {
   return user?.podeReservar === true;
 }
