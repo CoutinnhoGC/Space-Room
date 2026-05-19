@@ -9,7 +9,7 @@ import { SummaryCard } from "../components/SummaryCard";
 import { UpcomingReservations } from "../components/UpcomingReservations";
 import { buildDashboardMetrics, buildOccupationByHour, buildReservationsByDay, filterReservationsByPeriod, getDashboardPeriodLabel } from "../lib/dashboard";
 import { formatLongDate } from "../lib/formatters";
-import { canChooseInstitution, filterByInstitution, getAccessibleInstitutionId } from "../lib/permissions";
+import { canChooseInstitution, filterByActiveInstitution, getAccessibleInstitutionId } from "../lib/permissions";
 import { getCurrentUser } from "../lib/session";
 import { espacoService } from "../services/espacoService";
 import { instituicaoService } from "../services/instituicaoService";
@@ -55,10 +55,10 @@ export function DashboardPage() {
     load();
   }, []);
 
-  const visibleInstitutions = useMemo(() => filterByInstitution(instituicoes, currentUser, (item) => item.idInstituicao), [instituicoes, currentUser]);
-  const visibleSpaces = useMemo(() => filterByInstitution(espacos, currentUser, (item) => item.idInstituicao), [espacos, currentUser]);
-  const visibleUsers = useMemo(() => filterByInstitution(usuarios, currentUser, (item) => item.idInstituicao), [usuarios, currentUser]);
-  const visibleReservations = useMemo(() => filterByInstitution(reservas, currentUser, (item) => item.idInstituicao), [reservas, currentUser]);
+  const visibleInstitutions = useMemo(() => filterByActiveInstitution(instituicoes, currentUser, (item) => item.idInstituicao), [instituicoes, currentUser]);
+  const visibleSpaces = useMemo(() => filterByActiveInstitution(espacos, currentUser, (item) => item.idInstituicao), [espacos, currentUser]);
+  const visibleUsers = useMemo(() => filterByActiveInstitution(usuarios, currentUser, (item) => item.idInstituicao), [usuarios, currentUser]);
+  const visibleReservations = useMemo(() => filterByActiveInstitution(reservas, currentUser, (item) => item.idInstituicao), [reservas, currentUser]);
   const showInstitutionFilter = canChooseInstitution(currentUser, visibleInstitutions.length);
   const effectiveInstitutionId = showInstitutionFilter ? filters.institutionId : String(getAccessibleInstitutionId(currentUser, visibleInstitutions[0]?.idInstituicao) ?? "");
   const availableSpaceTypes = useMemo(() => [...new Set(visibleSpaces.filter((item) => item.idEspacoPai == null).map((item) => item.tipo))].sort(), [visibleSpaces]);

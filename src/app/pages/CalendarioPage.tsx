@@ -5,7 +5,7 @@ import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 import { Calendar } from "../components/ui/calendar";
 import { formatDate, formatTimeRange, getStatusReservaColor, getStatusReservaLabel } from "../lib/formatters";
-import { filterByInstitution } from "../lib/permissions";
+import { filterByActiveInstitution } from "../lib/permissions";
 import { getCurrentUser } from "../lib/session";
 import { espacoService } from "../services/espacoService";
 import { reservaService } from "../services/reservaService";
@@ -25,8 +25,8 @@ export function CalendarioPage() {
       try {
         setError(null);
         const [reservasData, espacosData] = await Promise.all([reservaService.list(), espacoService.list()]);
-        setReservas(filterByInstitution(reservasData, currentUser, (item) => item.idInstituicao));
-        setEspacos(filterByInstitution(espacosData, currentUser, (item) => item.idInstituicao));
+        setReservas(filterByActiveInstitution(reservasData, currentUser, (item) => item.idInstituicao));
+        setEspacos(filterByActiveInstitution(espacosData, currentUser, (item) => item.idInstituicao));
       } catch (err) {
         const message = err instanceof Error ? err.message : "Erro ao carregar calendário.";
         setError(message);

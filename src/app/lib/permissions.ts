@@ -99,6 +99,14 @@ export function filterByInstitution<T>(items: T[], user: Usuario | null | undefi
   return items.filter((item) => getInstitutionId(item) === user?.idInstituicao);
 }
 
+export function filterByActiveInstitution<T>(items: T[], user: Usuario | null | undefined, getInstitutionId: (item: T) => number | undefined) {
+  if (!user?.idInstituicao) {
+    return items;
+  }
+
+  return items.filter((item) => getInstitutionId(item) === user.idInstituicao);
+}
+
 export function inferDefaultReservationPermission(cargoId: number | undefined, institutionId: number | undefined, cargos: Cargo[], instituicoes: Instituicao[]) {
   if (!cargoId || !institutionId) {
     return false;

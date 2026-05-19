@@ -1,11 +1,10 @@
 import { apiRequest } from "../lib/api";
-import { isPlatformAdmin } from "../lib/permissions";
 import { getCurrentUser } from "../lib/session";
 import type { Reserva } from "../types/api";
 
 function sanitizeReservaPayload(payload: Reserva) {
   const currentUser = getCurrentUser();
-  if (!currentUser || isPlatformAdmin(currentUser)) {
+  if (!currentUser) {
     return payload;
   }
 

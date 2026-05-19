@@ -1,11 +1,10 @@
 import { apiRequest } from "../lib/api";
-import { isPlatformAdmin } from "../lib/permissions";
 import { getCurrentUser } from "../lib/session";
 import type { Espaco } from "../types/api";
 
 function sanitizeEspacoPayload(payload: Espaco) {
   const currentUser = getCurrentUser();
-  if (!currentUser || isPlatformAdmin(currentUser)) {
+  if (!currentUser) {
     return payload;
   }
 

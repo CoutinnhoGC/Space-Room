@@ -1,7 +1,7 @@
 import { BarChart3, Calendar, Download, FileText, TrendingUp } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
-import { canChooseInstitution, filterByInstitution, getAccessibleInstitutionId } from "../lib/permissions";
+import { canChooseInstitution, filterByActiveInstitution, getAccessibleInstitutionId } from "../lib/permissions";
 import { getCurrentUser } from "../lib/session";
 import { espacoService } from "../services/espacoService";
 import { instituicaoService } from "../services/instituicaoService";
@@ -33,10 +33,10 @@ export function RelatoriosPage() {
       try {
         setError(null);
         const [reservasData, usuariosData, espacosData, instituicoesData] = await Promise.all([reservaService.list(), usuarioService.list(), espacoService.list(), instituicaoService.list()]);
-        setReservas(filterByInstitution(reservasData, currentUser, (item) => item.idInstituicao));
-        setUsuarios(filterByInstitution(usuariosData, currentUser, (item) => item.idInstituicao));
-        setEspacos(filterByInstitution(espacosData, currentUser, (item) => item.idInstituicao));
-        setInstituicoes(filterByInstitution(instituicoesData, currentUser, (item) => item.idInstituicao));
+        setReservas(filterByActiveInstitution(reservasData, currentUser, (item) => item.idInstituicao));
+        setUsuarios(filterByActiveInstitution(usuariosData, currentUser, (item) => item.idInstituicao));
+        setEspacos(filterByActiveInstitution(espacosData, currentUser, (item) => item.idInstituicao));
+        setInstituicoes(filterByActiveInstitution(instituicoesData, currentUser, (item) => item.idInstituicao));
       } catch (err) {
         const message = err instanceof Error ? err.message : "Erro ao carregar relatorios.";
         setError(message);

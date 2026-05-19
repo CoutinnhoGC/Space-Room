@@ -69,6 +69,10 @@ export async function apiRequest<T>(path: string, init?: RequestInit): Promise<T
     headers.set("X-User-Id", String(currentUser.idUsuario));
   }
 
+  if (currentUser?.idInstituicao && !headers.has("X-Institution-Id")) {
+    headers.set("X-Institution-Id", String(currentUser.idInstituicao));
+  }
+
   if (API_DEBUG) {
     console.debug(`[api] ${init?.method ?? "GET"} ${url}`);
   }

@@ -6,7 +6,7 @@ import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious
 import { formatDate, formatDateTime, formatTimeRange, getStatusReservaColor, getStatusReservaLabel } from "../lib/formatters";
 import { addMuralMessage, getMuralMessages, removeMuralMessage, subscribeToMural } from "../lib/mural";
 import { createNotification } from "../lib/notifications";
-import { canAccessManagementNotifications, filterByInstitution } from "../lib/permissions";
+import { canAccessManagementNotifications, filterByActiveInstitution } from "../lib/permissions";
 import { getReservationSpaceLabel } from "../lib/reservationUtils";
 import { getCurrentUser } from "../lib/session";
 import { cargoService } from "../services/cargoService";
@@ -36,8 +36,8 @@ export function HomePage() {
       try {
         setError(null);
         const [reservasData, espacosData, cargosData] = await Promise.all([reservaService.list(), espacoService.list(), cargoService.list()]);
-        setReservas(filterByInstitution(reservasData, currentUser, (item) => item.idInstituicao));
-        setEspacos(filterByInstitution(espacosData, currentUser, (item) => item.idInstituicao));
+        setReservas(filterByActiveInstitution(reservasData, currentUser, (item) => item.idInstituicao));
+        setEspacos(filterByActiveInstitution(espacosData, currentUser, (item) => item.idInstituicao));
         setCargos(cargosData);
       } catch (err) {
         setError(err instanceof Error ? err.message : "Não foi possível carregar a tela inicial.");

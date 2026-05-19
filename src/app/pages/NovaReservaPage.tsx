@@ -3,7 +3,7 @@ import { AlertCircle, Building2, Calendar, CheckCircle, Clock, Layers3, MapPin, 
 import { Link, useNavigate } from "react-router";
 import { toast } from "sonner";
 import { createNotification } from "../lib/notifications";
-import { canReserve, filterByInstitution } from "../lib/permissions";
+import { canReserve, filterByActiveInstitution } from "../lib/permissions";
 import { getReservationConflictDetails, getReservationSpaceLabel, getRootSpace, getSpaceAvailabilityDetails, getSubspacesForSpace, hasReservationConflict } from "../lib/reservationUtils";
 import { getCurrentUser } from "../lib/session";
 import { validateReservationInterval } from "../lib/validators";
@@ -48,10 +48,10 @@ export function NovaReservaPage() {
           reservaService.list(),
         ]);
 
-        const scopedInstitutions = filterByInstitution(instituicoesData, currentUser, (item) => item.idInstituicao);
-        const scopedSpaces = filterByInstitution(espacosData, currentUser, (item) => item.idInstituicao);
-        const scopedUsers = filterByInstitution(usuariosData, currentUser, (item) => item.idInstituicao);
-        const scopedReservations = filterByInstitution(reservasData, currentUser, (item) => item.idInstituicao);
+        const scopedInstitutions = filterByActiveInstitution(instituicoesData, currentUser, (item) => item.idInstituicao);
+        const scopedSpaces = filterByActiveInstitution(espacosData, currentUser, (item) => item.idInstituicao);
+        const scopedUsers = filterByActiveInstitution(usuariosData, currentUser, (item) => item.idInstituicao);
+        const scopedReservations = filterByActiveInstitution(reservasData, currentUser, (item) => item.idInstituicao);
         const rootSpaces = scopedSpaces.filter((item) => item.idEspacoPai == null);
 
         setInstituicoes(scopedInstitutions);
