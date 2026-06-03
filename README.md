@@ -165,6 +165,8 @@ pnpm dev
 pnpm build
 ```
 
+....
+
 ## 📱 Responsividade
 
 O sistema é totalmente responsivo:
