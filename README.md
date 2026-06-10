@@ -185,4 +185,4 @@ O sistema é totalmente responsivo:
 
 ## 📝 Licença
 
-Sistema desenvolvido para uso institucional - SpaceRoom v1.0
+Sistema desenvolvido para uso institucional - SpaceRoom v3.0
