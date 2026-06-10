@@ -169,8 +169,8 @@ export function HomePage() {
             </div>
           </div>
 
-          <div className="px-12 md:px-14">
-            <Carousel opts={{ align: "start", loop: featuredReservations.length > 1 }}>
+          <div className="relative">
+            <Carousel opts={{ align: "start", loop: featuredReservations.length > 1 }} className="px-10 md:px-12">
               <CarouselContent>
                 {(featuredReservations.length > 0 ? featuredReservations : upcomingReservations.slice(0, 1)).map((reservation) => (
                   <CarouselItem key={reservation.idReserva ?? reservation.titulo} className="md:basis-1/2">
@@ -183,8 +183,8 @@ export function HomePage() {
                   </CarouselItem>
                 ))}
               </CarouselContent>
-              <CarouselPrevious className="-left-5 border-gray-200 bg-white text-gray-700 shadow-sm dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200" />
-              <CarouselNext className="-right-5 border-gray-200 bg-white text-gray-700 shadow-sm dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200" />
+              <CarouselPrevious className="left-0 z-10 border-gray-200 bg-white text-gray-700 shadow-sm dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200" />
+              <CarouselNext className="right-0 z-10 border-gray-200 bg-white text-gray-700 shadow-sm dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200" />
             </Carousel>
           </div>
         </article>

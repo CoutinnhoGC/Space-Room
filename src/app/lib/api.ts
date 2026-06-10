@@ -62,7 +62,7 @@ export async function apiRequest<T>(path: string, init?: RequestInit): Promise<T
   const currentUser = getCurrentUser();
 
   if (!headers.has("Content-Type") && init?.body !== undefined) {
-    headers.set("Content-Type", "application/json");
+    headers.set("Content-Type", "application/json; charset=utf-8");
   }
 
   if (currentUser?.idUsuario && !headers.has("X-User-Id")) {

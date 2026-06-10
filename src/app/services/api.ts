@@ -66,7 +66,7 @@ async function request<T>(method: string, path: string, data?: BodyInit | Record
     ArrayBuffer.isView(data);
 
   if (data !== undefined && !isBodyInit && !headers.has("Content-Type")) {
-    headers.set("Content-Type", "application/json");
+    headers.set("Content-Type", "application/json; charset=utf-8");
   }
 
   if (API_DEBUG) {
