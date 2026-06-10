@@ -4,6 +4,7 @@ Sistema de gerenciamento e reserva de salas, laboratórios e espaços compartilh
 
 ## 🎯 Sobre o Projeto
 
+
 SpaceRoom é uma plataforma moderna e intuitiva que permite:
 - Gerenciar espaços cadastrados (salas, laboratórios, auditórios)
 - Visualizar disponibilidade dos ambientes em tempo real
