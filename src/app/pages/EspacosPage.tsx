@@ -8,7 +8,8 @@ import { getEspacoHierarchyLabel, getSpaceHierarchyLevel, getSpacePathIds, getSu
 import { getCurrentUser } from "../lib/session";
 import { espacoService } from "../services/espacoService";
 import { instituicaoService } from "../services/instituicaoService";
-import type { Espaco, Instituicao, TipoEspaco } from "../types/api";
+import { usuarioService } from "../services/usuarioService";
+import type { Espaco, Instituicao, TipoEspaco, Usuario } from "../types/api";
 
 const tipos: TipoEspaco[] = ["SALA", "LABORATORIO", "AUDITORIO", "BIBLIOTECA", "COWORKING", "SALA_REUNIAO", "OUTRO"];
 
@@ -20,7 +21,10 @@ const emptyMainForm = {
   tipo: "SALA" as TipoEspaco,
   capacidade: "",
   localizacao: "",
+  codigoUnidade: "",
   permiteSubespacos: false,
+  exigeAprovacao: false,
+  idResponsavelEspaco: "",
   bloqueiaSubespacos: true,
   bloqueadoPorSubespacos: true,
   ativo: true,
@@ -42,6 +46,7 @@ export function EspacosPage() {
   const currentUser = getCurrentUser();
   const [espacos, setEspacos] = useState<Espaco[]>([]);
   const [instituicoes, setInstituicoes] = useState<Instituicao[]>([]);
+  const [usuarios, setUsuarios] = useState<Usuario[]>([]);
   const [search, setSearch] = useState("");
   const [tipoFiltro, setTipoFiltro] = useState("TODOS");
   const [showForm, setShowForm] = useState(false);
@@ -55,11 +60,13 @@ export function EspacosPage() {
   const loadData = async () => {
     try {
       setLoading(true);
-      const [espacosData, instituicoesData] = await Promise.all([espacoService.list(), instituicaoService.list()]);
+      const [espacosData, instituicoesData, usuariosData] = await Promise.all([espacoService.list(), instituicaoService.list(), usuarioService.list()]);
       const scopedSpaces = filterByActiveInstitution(espacosData, currentUser, (item) => item.idInstituicao);
       const scopedInstitutions = filterByActiveInstitution(instituicoesData, currentUser, (item) => item.idInstituicao);
+      const scopedUsers = filterByActiveInstitution(usuariosData, currentUser, (item) => item.idInstituicao);
       setEspacos(scopedSpaces.map((space) => ({ ...space, hierarchyLevel: getSpaceHierarchyLevel(scopedSpaces, space.idEspaco) })));
       setInstituicoes(scopedInstitutions);
+      setUsuarios(scopedUsers);
       setForm((current) => ({ ...current, idInstituicao: current.idInstituicao || String(currentUser?.idInstituicao ?? scopedInstitutions[0]?.idInstituicao ?? "") }));
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Erro ao carregar espacos.");
@@ -115,7 +122,10 @@ export function EspacosPage() {
       tipo: space.tipo,
       capacidade: String(space.capacidade),
       localizacao: space.localizacao ?? "",
+      codigoUnidade: space.codigoUnidade ?? "",
       permiteSubespacos: space.permiteSubespacos === true,
+      exigeAprovacao: space.exigeAprovacao === true,
+      idResponsavelEspaco: String(space.idResponsavelEspaco ?? ""),
       bloqueiaSubespacos: space.bloqueiaSubespacos !== false,
       bloqueadoPorSubespacos: space.bloqueadoPorSubespacos === true,
       ativo: space.ativo !== false,
@@ -189,9 +199,12 @@ export function EspacosPage() {
         tipo: form.tipo,
         capacidade: Number(form.capacidade),
         localizacao: form.localizacao.trim(),
+        codigoUnidade: form.codigoUnidade.trim(),
         idInstituicao: Number(form.idInstituicao),
         idEspacoPai: null,
         permiteSubespacos: form.permiteSubespacos,
+        exigeAprovacao: form.exigeAprovacao,
+        idResponsavelEspaco: form.idResponsavelEspaco ? Number(form.idResponsavelEspaco) : null,
         bloqueiaSubespacos: form.bloqueiaSubespacos,
         bloqueadoPorSubespacos: form.bloqueadoPorSubespacos,
         hierarchyLevel: 0,
@@ -331,10 +344,25 @@ export function EspacosPage() {
               <label className="mb-2 block text-sm font-medium text-gray-700 dark:text-slate-300">Localizacao</label>
               <input value={form.localizacao} maxLength={120} onChange={(event) => setForm((current) => ({ ...current, localizacao: event.target.value }))} placeholder="Localizacao" className={inputClassName} />
             </div>
+            <div>
+              <label className="mb-2 block text-sm font-medium text-gray-700 dark:text-slate-300">Codigo da unidade</label>
+              <input value={form.codigoUnidade} maxLength={80} onChange={(event) => setForm((current) => ({ ...current, codigoUnidade: event.target.value }))} placeholder="Ex.: unidade-centro" className={inputClassName} />
+            </div>
+            <div>
+              <label className="mb-2 block text-sm font-medium text-gray-700 dark:text-slate-300">Responsavel pela aprovacao</label>
+              <select value={form.idResponsavelEspaco} onChange={(event) => setForm((current) => ({ ...current, idResponsavelEspaco: event.target.value }))} className={inputClassName}>
+                <option value="">Sem responsavel definido</option>
+                {usuarios.map((item) => <option key={item.idUsuario} value={item.idUsuario}>{item.nome}</option>)}
+              </select>
+            </div>
             <div className="md:col-span-2 grid gap-3 md:grid-cols-2">
               <label className="flex items-center gap-2 rounded-lg border border-gray-200 bg-gray-50 px-4 py-3 text-sm text-gray-700 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200">
                 <input type="checkbox" checked={form.permiteSubespacos} onChange={(event) => setForm((current) => ({ ...current, permiteSubespacos: event.target.checked }))} />
                 Habilitar espacos internos
+              </label>
+              <label className="flex items-center gap-2 rounded-lg border border-gray-200 bg-gray-50 px-4 py-3 text-sm text-gray-700 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200">
+                <input type="checkbox" checked={form.exigeAprovacao} onChange={(event) => setForm((current) => ({ ...current, exigeAprovacao: event.target.checked }))} />
+                Exigir aprovacao antes de confirmar
               </label>
               <label className="flex items-center gap-2 rounded-lg border border-gray-200 bg-gray-50 px-4 py-3 text-sm text-gray-700 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200">
                 <input type="checkbox" checked={form.ativo} onChange={(event) => setForm((current) => ({ ...current, ativo: event.target.checked }))} />
@@ -476,6 +504,7 @@ export function EspacosPage() {
               <div className="mb-3 text-xs text-gray-500 dark:text-slate-400">{space.localizacao || "Localizacao nao informada"}</div>
               <div className="mb-3 flex flex-wrap gap-2 text-xs">
                 <span className={`rounded-md px-2.5 py-1 font-medium ${space.ativo === false ? "bg-gray-100 text-gray-700 dark:bg-slate-800 dark:text-slate-300" : "bg-green-50 text-green-700 dark:bg-green-950/40 dark:text-green-300"}`}>{space.ativo === false ? "Inativo" : "Ativo"}</span>
+                {space.exigeAprovacao === true && <span className="rounded-md bg-violet-50 px-2.5 py-1 font-medium text-violet-700 dark:bg-violet-950/40 dark:text-violet-300">Exige aprovação</span>}
                 {space.bloqueiaSubespacos === true && <span className="rounded-md bg-blue-50 px-2.5 py-1 font-medium text-blue-700 dark:bg-blue-950/40 dark:text-blue-300">Pai bloqueia filhos</span>}
                 {space.bloqueadoPorSubespacos === true && <span className="rounded-md bg-amber-50 px-2.5 py-1 font-medium text-amber-700 dark:bg-amber-950/40 dark:text-amber-300">Filhos bloqueiam pai</span>}
               </div>

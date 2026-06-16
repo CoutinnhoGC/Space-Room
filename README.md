@@ -1,188 +1,75 @@
 # SpaceRoom
 
-Sistema de gerenciamento e reserva de salas, laboratórios e espaços compartilhados para instituições de ensino.
+Plataforma de gestão de espaços e reservas para instituições de ensino, empresas e operações multiunidade.
 
-## 🎯 Sobre o Projeto
+## Visão geral
 
-SpaceRoom é uma plataforma moderna e intuitiva que permite:
-- Gerenciar espaços cadastrados (salas, laboratórios, auditórios)
-- Visualizar disponibilidade dos ambientes em tempo real
-- Criar, editar e cancelar reservas
-- Controlar usuários vinculados a instituições
-- Organizar o uso dos espaços de forma eficiente.
+O projeto está dividido em duas aplicações:
 
-## 🚀 Tecnologias
+- `Space-Room`: frontend React + Vite
+- `Space-Room-APP`: backend Spring Boot + PostgreSQL
 
-- **React 18** - Framework JavaScript
-- **TypeScript** - Tipagem estática
-- **Tailwind CSS v4** - Framework CSS utility-first
-- **React Router** - Roteamento
-- **Recharts** - Gráficos e visualizações
-- **Lucide React** - Ícones modernos
-- **Vite** - Build tool
+## Funcionalidades atuais
 
-## 📁 Estrutura do Projeto
+- autenticação com JWT
+- senhas com BCrypt
+- gestão de instituições, usuários, espaços e reservas
+- subespaços e bloqueio hierárquico entre pai/filhos
+- RBAC com permissões persistidas em `cargo_permissao` e sobrescritas em `usuario_permissao`
+- reservas com fluxo opcional de aprovação por espaço
+- base inicial para SaaS com planos, módulos e multiunidade
 
-```
-src/
-├── app/
-│   ├── components/       # Componentes reutilizáveis
-│   │   ├── Layout.tsx
-│   │   ├── Sidebar.tsx
-│   │   ├── Header.tsx
-│   │   ├── SummaryCard.tsx
-│   │   └── ...
-│   ├── pages/           # Páginas da aplicação
-│   │   ├── DashboardPage.tsx
-│   │   ├── LoginPage.tsx
-│   │   ├── ReservasPage.tsx
-│   │   ├── NovaReservaPage.tsx
-│   │   ├── EspacosPage.tsx
-│   │   ├── UsuariosPage.tsx
-│   │   ├── CalendarioPage.tsx
-│   │   └── ConfiguracoesPage.tsx
-│   ├── routes.tsx       # Configuração de rotas
-│   └── App.tsx          # Componente raiz
-└── styles/
-    ├── theme.css        # Variáveis de tema (light/dark)
-    ├── fonts.css
-    ├── tailwind.css
-    └── index.css
-```
+## Evoluções estratégicas já preparadas
 
-## 🎨 Design System
+- catálogo ampliado de permissões:
+  - `GERENCIAR_INSTITUICOES`
+  - `GERENCIAR_USUARIOS`
+  - `GERENCIAR_ESPACOS`
+  - `RESERVAR_ESPACO`
+  - `APROVAR_RESERVAS`
+  - `GERENCIAR_COMUNICADOS`
+  - `VISUALIZAR_AUDITORIA`
+  - `GERENCIAR_PLANOS`
+- espaços com:
+  - `codigoUnidade`
+  - `exigeAprovacao`
+  - `idResponsavelEspaco`
+- reservas com metadados de aprovação:
+  - `observacaoAprovacao`
+  - `aprovadaPorUsuarioId`
+  - `aprovadaEm`
+- planos com flags para:
+  - multiunidade
+  - workflow de aprovação
+  - auditoria avançada
+  - módulos habilitados
 
-### Cores Principais
+## Banco de dados
 
-**Modo Claro:**
-- Primary Blue: `#3b82f6`
-- Primary Blue Dark: `#1d4ed8`
-- Primary Blue Light: `#60a5fa`
-- Background: `#ffffff`
-- Text: `#111827`
+O backend está com `spring.jpa.hibernate.ddl-auto=update`, então em ambiente local o Hibernate tende a criar as novas colunas automaticamente.
 
-**Modo Escuro (preparado):**
-- Primary Blue: `#60a5fa`
-- Background: `#0f172a`
-- Text: `#f1f5f9`
+Para produção, há um script dedicado em `SQLs/spaceroom_v2_2_rbac_aprovacao_saas.sql`.
 
-### Componentes
+## Desenvolvimento
 
-O sistema utiliza componentes consistentes:
-- Cards com sombras suaves
-- Bordas arredondadas (8px padrão)
-- Espaçamento generoso
-- Tipografia hierárquica clara
-- Estados hover/focus bem definidos
-
-## 📄 Páginas
-
-### 🏠 Dashboard
-- Visão geral com métricas principais
-- Gráficos de ocupação e reservas
-- Lista de próximas reservas
-- Atividades recentes
-- Status dos espaços
-
-### 📅 Reservas
-- Lista completa de reservas
-- Filtros por data, status e espaço
-- Ações: visualizar, editar, cancelar
-
-### ➕ Nova Reserva
-- Formulário completo de criação
-- Seleção de instituição e espaço
-- Data e horários
-- Validação de conflitos
-- Feedback visual
-
-### 🏢 Espaços
-- Cards com informações dos espaços
-- Capacidade e tipo
-- Status de disponibilidade
-- Gerenciamento (editar/excluir)
-
-### 👥 Usuários
-- Listagem de todos os usuários
-- Informações de contato e função
-- Status ativo/inativo
-- Gerenciamento de perfis
-
-### 📆 Calendário
-- Visualização mensal
-- Indicadores de dias com reservas
-- Detalhes das reservas do dia
-
-### ⚙️ Configurações
-- Dados do perfil do usuário
-- Informações da instituição
-- Preferências do sistema
-
-### 🔐 Login / Cadastro
-- Interface clean e moderna
-- Validação de campos
-- Links de recuperação de senha
-
-## 🎯 Funcionalidades Principais
-
-1. **Gestão de Reservas**
-   - Criação com validação de conflitos
-   - Edição e cancelamento
-   - Histórico completo
-
-2. **Dashboard Institucional**
-   - Métricas em tempo real
-   - Gráficos interativos
-   - Atividades recentes
-
-3. **Gestão de Espaços**
-   - Cadastro de ambientes
-   - Controle de capacidade
-   - Status de disponibilidade
-
-4. **Multi-instituição**
-   - Suporte a múltiplas instituições
-   - Filtros por instituição
-   - Gestão separada
-
-## 🌙 Dark Mode
-
-O sistema está preparado para suportar modo escuro:
-- Variáveis CSS já configuradas
-- Esquema de cores definido
-- Estrutura pronta para implementação do toggle
-
-## 🔧 Desenvolvimento
+### Frontend
 
 ```bash
-# Instalar dependências
+cd Space-Room
 pnpm install
-
-# Executar em desenvolvimento
 pnpm dev
-
-# Build para produção
-pnpm build
 ```
 
-....
+### Backend
 
-## 📱 Responsividade
+```bash
+cd Space-Room-APP
+./mvnw spring-boot:run
+```
 
-O sistema é totalmente responsivo:
-- Desktop: Layout completo com sidebar fixa
-- Tablet: Adaptação de grid e espaçamentos
-- Mobile: Menu colapsável, reorganização de componentes
+## Próximos passos recomendados
 
-## 🔮 Próximos Passos
-
-- [ ] Implementar toggle de dark mode
-- [ ] Adicionar autenticação real
-- [ ] Integração com backend
-- [ ] Notificações em tempo real
-- [ ] Exportação de relatórios
-- [ ] Sistema de permissões avançado
-
-## 📝 Licença
-
-Sistema desenvolvido para uso institucional - SpaceRoom v3.0
+- criar UI dedicada para administração de permissões por cargo
+- expor endpoints de auditoria
+- separar aprovação, cancelamento e reprovação em estados próprios
+- aplicar feature flags de plano na experiência do frontend

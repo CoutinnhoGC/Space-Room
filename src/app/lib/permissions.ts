@@ -3,27 +3,6 @@ import type { Cargo, Instituicao, TipoInstituicao, Usuario } from "../types/api"
 const schoolInstitutionTypes: TipoInstituicao[] = ["ESCOLA", "FACULDADE", "UNIVERSIDADE", "SENAI"];
 const schoolRoles = new Set(["diretor", "diretora", "vice diretor", "vice diretora", "vice-diretor", "vice-diretora", "docente", "professor", "professora", "coordenador", "coordenadora"]);
 const businessRoles = new Set(["dono", "dona", "proprietario", "proprietaria", "socio", "socia", "gerente", "gestor", "gestora", "administrador", "administradora"]);
-const managementRoles = new Set([
-  "diretor",
-  "diretora",
-  "vice diretor",
-  "vice diretora",
-  "vice-diretor",
-  "vice-diretora",
-  "coordenador",
-  "coordenadora",
-  "dono",
-  "dona",
-  "proprietario",
-  "proprietaria",
-  "socio",
-  "socia",
-  "gerente",
-  "gestor",
-  "gestora",
-  "administrador",
-  "administradora",
-]);
 
 function normalize(value: string) {
   return value
@@ -32,14 +11,6 @@ function normalize(value: string) {
     .toLowerCase()
     .trim()
     .replace(/\s+/g, " ");
-}
-
-export function isManagementCargoName(value?: string | null) {
-  if (!value) {
-    return false;
-  }
-
-  return managementRoles.has(normalize(value));
 }
 
 export function isPlatformAdmin(user: Usuario | null | undefined) {
@@ -66,17 +37,15 @@ export function canReserve(user: Usuario | null | undefined) {
   return user?.podeReservar === true;
 }
 
-export function canAccessManagementNotifications(user: Usuario | null | undefined, cargos: Cargo[]) {
+export function canAccessManagementNotifications(user: Usuario | null | undefined, _cargos: Cargo[]) {
   if (!user) {
     return false;
   }
 
-  if (isPlatformAdmin(user)) {
-    return true;
-  }
-
-  const cargo = cargos.find((item) => item.idCargo === user.idCargo);
-  return isManagementCargoName(cargo?.nome);
+  return isPlatformAdmin(user)
+    || user.podeGerenciarComunicados === true
+    || user.podeAprovarReservas === true
+    || user.podeGerenciarUsuarios === true;
 }
 
 export function isRestrictedToOwnInstitution(user: Usuario | null | undefined) {

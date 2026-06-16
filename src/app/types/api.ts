@@ -58,6 +58,11 @@ export interface Usuario {
   ativo?: boolean | null;
   podeReservar?: boolean | null;
   adminPlataforma?: boolean | null;
+  podeGerenciarUsuarios?: boolean | null;
+  podeGerenciarEspacos?: boolean | null;
+  podeAprovarReservas?: boolean | null;
+  podeGerenciarComunicados?: boolean | null;
+  podeVisualizarAuditoria?: boolean | null;
   criadoEm?: string;
   atualizadoEm?: string;
 }
@@ -80,7 +85,10 @@ export interface Espaco {
   capacidade: number;
   recursosFixos?: string | null;
   imagemUrl?: string | null;
+  codigoUnidade?: string | null;
   permiteSubespacos?: boolean | null;
+  exigeAprovacao?: boolean | null;
+  idResponsavelEspaco?: number | null;
   bloqueiaSubespacos?: boolean | null;
   bloqueadoPorSubespacos?: boolean | null;
   hierarchyPath?: string | null;
@@ -102,6 +110,9 @@ export interface Reserva {
   dataFim: string;
   status?: StatusReserva | null;
   observacao?: string | null;
+  observacaoAprovacao?: string | null;
+  aprovadaPorUsuarioId?: number | null;
+  aprovadaEm?: string | null;
   criadoEm?: string;
   atualizadoEm?: string;
 }

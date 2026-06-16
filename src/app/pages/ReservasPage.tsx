@@ -138,6 +138,7 @@ export function ReservasPage() {
 
   const parentSpaces = useMemo(() => getParentSpaces(espacos, form.idInstituicao), [espacos, form.idInstituicao]);
   const availableSubspaces = useMemo(() => getSubspacesForSpace(espacos, form.idEspaco), [espacos, form.idEspaco]);
+  const selectedSpace = useMemo(() => parentSpaces.find((item) => String(item.idEspaco) === form.idEspaco) ?? null, [parentSpaces, form.idEspaco]);
   const conflictDetails = useMemo(() => {
     const dataInicio = form.data && form.horaInicio ? `${form.data}T${form.horaInicio}:00` : "";
     const dataFim = form.data && form.horaFim ? `${form.data}T${form.horaFim}:00` : "";
@@ -298,7 +299,9 @@ export function ReservasPage() {
         idSubespaco: form.idSubespaco ? Number(form.idSubespaco) : null,
         dataInicio,
         dataFim,
-        status: panelMode === "quick" ? "CONFIRMADA" : form.status,
+        status: panelMode === "quick"
+          ? (selectedSpace?.exigeAprovacao ? "PENDENTE" : "CONFIRMADA")
+          : form.status,
         observacao: form.observacao.trim(),
       };
 
@@ -308,8 +311,10 @@ export function ReservasPage() {
         toast.success("Reserva atualizada com sucesso.");
       } else {
         const created = await reservaService.create(payload);
-        createNotification({ type: "RESERVA_CRIADA", institutionId: created.idInstituicao, title: panelMode === "quick" ? "Reserva rapida criada" : "Nova reserva criada", description: `${created.titulo} foi registrada${currentUser?.nome ? ` por ${currentUser.nome}` : ""}.`, entityId: created.idReserva, actorUserId: currentUser?.idUsuario });
-        toast.success(panelMode === "quick" ? "Reserva rapida criada com sucesso." : "Reserva criada com sucesso.");
+        createNotification({ type: "RESERVA_CRIADA", institutionId: created.idInstituicao, title: panelMode === "quick" ? "Reserva rápida criada" : "Nova reserva criada", description: `${created.titulo} foi registrada${currentUser?.nome ? ` por ${currentUser.nome}` : ""}.`, entityId: created.idReserva, actorUserId: currentUser?.idUsuario });
+        toast.success(panelMode === "quick"
+          ? (selectedSpace?.exigeAprovacao ? "Reserva criada e enviada para aprovação." : "Reserva rápida criada com sucesso.")
+          : "Reserva criada com sucesso.");
       }
 
       closePanels();
@@ -378,7 +383,7 @@ export function ReservasPage() {
             <div className="grid grid-cols-2 gap-4"><div><label className="mb-2 block text-sm font-medium text-gray-700 dark:text-slate-300">Inicio <span className="text-red-500">*</span></label><input type="time" value={form.horaInicio} onChange={(event) => setForm((current) => ({ ...current, horaInicio: event.target.value }))} className={inputClassName} /></div><div><label className="mb-2 block text-sm font-medium text-gray-700 dark:text-slate-300">Fim <span className="text-red-500">*</span></label><input type="time" value={form.horaFim} onChange={(event) => setForm((current) => ({ ...current, horaFim: event.target.value }))} className={inputClassName} /></div></div>
             <div className="md:col-span-2"><label className="mb-2 block text-sm font-medium text-gray-700 dark:text-slate-300">Observacoes</label><textarea value={form.observacao} maxLength={500} onChange={(event) => setForm((current) => ({ ...current, observacao: event.target.value }))} placeholder="Observacoes" rows={4} className={`${inputClassName} resize-none`} /></div>
             {conflictDetails?.conflict && <div className="md:col-span-2 rounded-xl border border-yellow-200 bg-yellow-50 px-4 py-4 text-sm text-yellow-900 dark:border-yellow-900/60 dark:bg-yellow-950/30 dark:text-yellow-100"><div className="font-medium">Conflito detectado</div><div className="mt-1">{conflictDetails.message}</div></div>}
-            {panelMode === "quick" && <div className="md:col-span-2 rounded-xl border border-blue-100 bg-blue-50 px-4 py-4 text-sm text-blue-900 dark:border-blue-900/60 dark:bg-blue-950/30 dark:text-blue-100">A reserva rapida usa sua instituicao e o seu perfil atual para registrar uma reserva objetiva, com confirmacao imediata quando nao houver conflito de horario.</div>}
+            {panelMode === "quick" && <div className="md:col-span-2 rounded-xl border border-blue-100 bg-blue-50 px-4 py-4 text-sm text-blue-900 dark:border-blue-900/60 dark:bg-blue-950/30 dark:text-blue-100">{selectedSpace?.exigeAprovacao === true ? "Esta reserva rápida será criada como pendente até aprovação do responsável do espaço." : "A reserva rápida usa sua instituição e o seu perfil atual para registrar uma reserva objetiva, com confirmação imediata quando não houver conflito de horário."}</div>}
             <div className="md:col-span-2 flex items-center gap-3"><button type="submit" disabled={saving || !userCanReserve} className="flex items-center gap-2 rounded-lg bg-gradient-to-r from-blue-500 to-blue-600 px-5 py-3 text-white disabled:opacity-70"><FileText className="h-4 w-4" />{saving ? "Salvando..." : panelMode === "quick" ? "Confirmar reserva rapida" : "Salvar"}</button><button type="button" onClick={closePanels} className="rounded-lg border border-gray-200 px-5 py-3 text-gray-700 dark:border-slate-700 dark:text-slate-200">Cancelar</button></div>
           </form>
         </div>
