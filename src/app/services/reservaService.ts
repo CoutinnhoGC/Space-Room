@@ -1,5 +1,6 @@
-import { apiRequest } from "../lib/api";
+import { apiRequest, cachedApiRequest, invalidateApiCache } from "../lib/api";
 import { getCurrentUser } from "../lib/session";
+import { CACHE_TTL } from "./cacheConfig";
 import type { Reserva } from "../types/api";
 
 function sanitizeReservaPayload(payload: Reserva) {
@@ -16,20 +17,20 @@ function sanitizeReservaPayload(payload: Reserva) {
 }
 
 export const reservaService = {
-  list: () => apiRequest<Reserva[]>("/reservas"),
-  getById: (id: number) => apiRequest<Reserva>(`/reservas/${id}`),
+  list: () => cachedApiRequest<Reserva[]>("/reservas", CACHE_TTL.reservas),
+  getById: (id: number) => cachedApiRequest<Reserva>(`/reservas/${id}`, CACHE_TTL.reservas),
   create: (payload: Reserva) =>
     apiRequest<Reserva>("/reservas", {
       method: "POST",
       body: JSON.stringify(sanitizeReservaPayload(payload)),
-    }),
+    }).finally(() => invalidateApiCache("/reservas")),
   update: (id: number, payload: Reserva) =>
     apiRequest<Reserva>(`/reservas/${id}`, {
       method: "PUT",
       body: JSON.stringify(sanitizeReservaPayload(payload)),
-    }),
+    }).finally(() => invalidateApiCache("/reservas")),
   remove: (id: number) =>
     apiRequest<void>(`/reservas/${id}`, {
       method: "DELETE",
-    }),
+    }).finally(() => invalidateApiCache("/reservas")),
 };

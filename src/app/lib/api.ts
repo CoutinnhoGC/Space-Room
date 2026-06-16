@@ -10,6 +10,7 @@ function normalizeBaseUrl(url?: string) {
 export const BASE_URL = normalizeBaseUrl(rawBaseUrl);
 export const API_BASE_URL = BASE_URL;
 const API_DEBUG = import.meta.env.VITE_API_DEBUG === "true";
+const responseCache = new Map<string, { expiresAt: number; value?: unknown; promise?: Promise<unknown> }>();
 
 export class ApiError extends Error {
   status: number;
@@ -54,6 +55,24 @@ async function parseResponse<T>(response: Response): Promise<T> {
   }
 
   return payload as T;
+}
+
+function buildCacheKey(path: string) {
+  return `${getAccessToken() ?? "anon"}::${buildUrl(path)}`;
+}
+
+export function invalidateApiCache(pathPrefix?: string) {
+  if (!pathPrefix) {
+    responseCache.clear();
+    return;
+  }
+
+  const normalizedPrefix = buildUrl(pathPrefix);
+  for (const key of responseCache.keys()) {
+    if (key.includes(normalizedPrefix)) {
+      responseCache.delete(key);
+    }
+  }
 }
 
 export async function apiRequest<T>(path: string, init?: RequestInit): Promise<T> {
@@ -104,4 +123,43 @@ export async function apiRequest<T>(path: string, init?: RequestInit): Promise<T
 
     throw connectionError;
   }
+}
+
+export async function cachedApiRequest<T>(path: string, ttlMs = 15000, init?: RequestInit): Promise<T> {
+  const method = init?.method ?? "GET";
+  if (method !== "GET") {
+    return apiRequest<T>(path, init);
+  }
+
+  const cacheKey = buildCacheKey(path);
+  const now = Date.now();
+  const cached = responseCache.get(cacheKey);
+
+  if (cached?.value !== undefined && cached.expiresAt > now) {
+    return cached.value as T;
+  }
+
+  if (cached?.promise) {
+    return cached.promise as Promise<T>;
+  }
+
+  const promise = apiRequest<T>(path, init)
+    .then((value) => {
+      responseCache.set(cacheKey, {
+        value,
+        expiresAt: Date.now() + ttlMs,
+      });
+      return value;
+    })
+    .catch((error) => {
+      responseCache.delete(cacheKey);
+      throw error;
+    });
+
+  responseCache.set(cacheKey, {
+    expiresAt: now + ttlMs,
+    promise,
+  });
+
+  return promise;
 }

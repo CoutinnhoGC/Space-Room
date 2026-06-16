@@ -1,5 +1,6 @@
-import { apiRequest } from "../lib/api";
+import { apiRequest, cachedApiRequest, invalidateApiCache } from "../lib/api";
 import { getCurrentUser } from "../lib/session";
+import { CACHE_TTL } from "./cacheConfig";
 import type { Espaco } from "../types/api";
 
 function sanitizeEspacoPayload(payload: Espaco) {
@@ -15,20 +16,20 @@ function sanitizeEspacoPayload(payload: Espaco) {
 }
 
 export const espacoService = {
-  list: () => apiRequest<Espaco[]>("/espacos"),
-  getById: (id: number) => apiRequest<Espaco>(`/espacos/${id}`),
+  list: () => cachedApiRequest<Espaco[]>("/espacos", CACHE_TTL.espacos),
+  getById: (id: number) => cachedApiRequest<Espaco>(`/espacos/${id}`, CACHE_TTL.espacos),
   create: (payload: Espaco) =>
     apiRequest<Espaco>("/espacos", {
       method: "POST",
       body: JSON.stringify(sanitizeEspacoPayload(payload)),
-    }),
+    }).finally(() => invalidateApiCache("/espacos")),
   update: (id: number, payload: Espaco) =>
     apiRequest<Espaco>(`/espacos/${id}`, {
       method: "PUT",
       body: JSON.stringify(sanitizeEspacoPayload(payload)),
-    }),
+    }).finally(() => invalidateApiCache("/espacos")),
   remove: (id: number) =>
     apiRequest<void>(`/espacos/${id}`, {
       method: "DELETE",
-    }),
+    }).finally(() => invalidateApiCache("/espacos")),
 };

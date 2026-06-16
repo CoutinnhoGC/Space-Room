@@ -42,10 +42,7 @@ export function canAccessManagementNotifications(user: Usuario | null | undefine
     return false;
   }
 
-  return isPlatformAdmin(user)
-    || user.podeGerenciarComunicados === true
-    || user.podeAprovarReservas === true
-    || user.podeGerenciarUsuarios === true;
+  return isPlatformAdmin(user);
 }
 
 export function isRestrictedToOwnInstitution(user: Usuario | null | undefined) {

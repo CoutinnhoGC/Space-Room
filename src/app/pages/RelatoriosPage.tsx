@@ -21,6 +21,7 @@ function downloadCsv(filename: string, lines: string[]) {
 
 export function RelatoriosPage() {
   const currentUser = getCurrentUser();
+  const currentInstitutionId = currentUser?.idInstituicao ?? null;
   const [reservas, setReservas] = useState<Reserva[]>([]);
   const [usuarios, setUsuarios] = useState<Usuario[]>([]);
   const [espacos, setEspacos] = useState<Espaco[]>([]);
@@ -45,7 +46,7 @@ export function RelatoriosPage() {
     };
 
     load();
-  }, [currentUser]);
+  }, [currentInstitutionId]);
 
   const showInstitutionFilter = canChooseInstitution(currentUser, instituicoes.length);
   const effectiveInstitutionId = showInstitutionFilter ? filtroInstituicao : String(getAccessibleInstitutionId(currentUser, instituicoes[0]?.idInstituicao) ?? "");

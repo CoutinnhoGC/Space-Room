@@ -23,6 +23,7 @@ const defaultNotices = [
 export function HomePage() {
   const navigate = useNavigate();
   const currentUser = getCurrentUser();
+  const currentInstitutionId = currentUser?.idInstituicao ?? null;
   const [reservas, setReservas] = useState<Reserva[]>([]);
   const [espacos, setEspacos] = useState<Espaco[]>([]);
   const [cargos, setCargos] = useState<Cargo[]>([]);
@@ -47,7 +48,7 @@ export function HomePage() {
     };
 
     load();
-  }, [currentUser]);
+  }, [currentInstitutionId]);
 
   useEffect(() => subscribeToMural(() => setMuralVersion((current) => current + 1)), []);
 
