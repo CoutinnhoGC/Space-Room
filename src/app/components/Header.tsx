@@ -1,11 +1,12 @@
-import { Bell, CheckCheck, LogOut, Menu, Moon, Plus, Search, Sun } from "lucide-react";
+ï»¿import { Bell, CheckCheck, LogOut, Menu, Moon, Plus, Search, Sun } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router";
 import { useTheme } from "next-themes";
 import { getInitials } from "../lib/formatters";
 import { getNotificationsForUser, markAllNotificationsAsRead, markNotificationAsRead, subscribeToNotificationStore } from "../lib/notifications";
 import { canAccessManagementNotifications, canReserve } from "../lib/permissions";
-import { getCurrentUser, setCurrentUser, subscribeToSessionUpdates } from "../lib/session";
+import { clearCurrentSession, getCurrentUser, subscribeToSessionUpdates } from "../lib/session";
+import { authService } from "../services/authService";
 import { cargoService } from "../services/cargoService";
 import type { Cargo, Usuario } from "../types/api";
 import { Switch } from "./ui/switch";
@@ -62,8 +63,13 @@ export function Header({ onMenuToggle }: HeaderProps) {
     return notifications.filter((item) => !item.readByUserIds?.includes(currentUser.idUsuario)).length;
   }, [notifications, currentUser?.idUsuario]);
 
-  const handleLogout = () => {
-    setCurrentUser(null);
+  const handleLogout = async () => {
+    try {
+      await authService.logout();
+    } catch {
+      // Clear the local session even if the backend already considers it invalid.
+    }
+    clearCurrentSession();
     navigate("/login", { replace: true });
   };
 
@@ -91,7 +97,7 @@ export function Header({ onMenuToggle }: HeaderProps) {
             <Search className="h-4 w-4 text-gray-400 dark:text-slate-500" />
             <input
               type="text"
-              placeholder="Buscar espaços, reservas..."
+              placeholder="Buscar espaÃ§os, reservas..."
               className="flex-1 border-none bg-transparent text-sm text-gray-700 outline-none placeholder:text-gray-400 dark:text-slate-200 dark:placeholder:text-slate-500"
             />
           </div>
@@ -123,7 +129,7 @@ export function Header({ onMenuToggle }: HeaderProps) {
           {canViewNotifications && (
             <Popover open={notificationOpen} onOpenChange={setNotificationOpen}>
               <PopoverTrigger asChild>
-                <button className="relative rounded-lg p-2 transition-colors hover:bg-gray-100 dark:hover:bg-slate-800" title="Notificações" type="button">
+                <button className="relative rounded-lg p-2 transition-colors hover:bg-gray-100 dark:hover:bg-slate-800" title="NotificaÃ§Ãµes" type="button">
                   <Bell className="h-5 w-5 text-gray-600 dark:text-slate-300" />
                   {unreadCount > 0 && (
                     <span className="absolute -right-0.5 -top-0.5 flex h-5 min-w-5 items-center justify-center rounded-full bg-blue-600 px-1 text-[10px] font-semibold text-white">
@@ -136,8 +142,8 @@ export function Header({ onMenuToggle }: HeaderProps) {
                 <div className="border-b border-gray-100 bg-gray-50/80 px-4 py-3 dark:border-slate-800 dark:bg-slate-900/80">
                   <div className="flex items-center justify-between gap-3">
                     <div>
-                      <h3 className="text-sm font-semibold text-gray-900 dark:text-slate-100">Notificações</h3>
-                      <p className="mt-1 text-xs text-gray-500 dark:text-slate-400">Eventos de reservas e espaços da sua instituição.</p>
+                      <h3 className="text-sm font-semibold text-gray-900 dark:text-slate-100">NotificaÃ§Ãµes</h3>
+                      <p className="mt-1 text-xs text-gray-500 dark:text-slate-400">Eventos de reservas e espaÃ§os da sua instituiÃ§Ã£o.</p>
                     </div>
                     <button type="button" onClick={handleMarkAllNotificationsAsRead} className="inline-flex items-center gap-1.5 text-xs font-medium text-blue-700 hover:text-blue-800 dark:text-blue-300 dark:hover:text-blue-200">
                       <CheckCheck className="h-3.5 w-3.5" />
@@ -168,12 +174,12 @@ export function Header({ onMenuToggle }: HeaderProps) {
                     );
                   })}
 
-                  {notifications.length === 0 && <div className="px-4 py-8 text-center text-sm text-gray-500 dark:text-slate-400">Nenhuma notificação disponível no momento.</div>}
+                  {notifications.length === 0 && <div className="px-4 py-8 text-center text-sm text-gray-500 dark:text-slate-400">Nenhuma notificaÃ§Ã£o disponÃ­vel no momento.</div>}
                 </div>
 
                 <div className="border-t border-gray-100 bg-gray-50/80 px-4 py-3 dark:border-slate-800 dark:bg-slate-900/80">
                   <Link to="/configuracoes" className="text-sm font-medium text-blue-700 hover:text-blue-800 dark:text-blue-300 dark:hover:text-blue-200">
-                    Ajustar preferências de notificação
+                    Ajustar preferÃªncias de notificaÃ§Ã£o
                   </Link>
                 </div>
               </PopoverContent>
@@ -184,7 +190,7 @@ export function Header({ onMenuToggle }: HeaderProps) {
             <Link to="/perfil" className="flex items-center gap-3 rounded-xl p-1 pr-2 transition-colors hover:bg-gray-50 dark:hover:bg-slate-900" title="Abrir perfil">
               <div className="hidden text-right sm:block">
                 <div className="text-sm font-medium text-gray-900 dark:text-slate-100">{currentUser?.nome ?? "Visitante"}</div>
-                <div className="text-xs text-gray-500 dark:text-slate-400">{currentUser?.email ?? "Sem sessão"}</div>
+                <div className="text-xs text-gray-500 dark:text-slate-400">{currentUser?.email ?? "Sem sessÃ£o"}</div>
               </div>
               <div className="flex h-9 w-9 items-center justify-center rounded-full bg-gradient-to-br from-blue-400 to-blue-600 text-sm font-medium text-white">
                 {getInitials(currentUser?.nome ?? "Visitante")}
@@ -199,3 +205,4 @@ export function Header({ onMenuToggle }: HeaderProps) {
     </header>
   );
 }
+

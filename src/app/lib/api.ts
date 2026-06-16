@@ -1,4 +1,4 @@
-import { getCurrentUser } from "./session";
+import { clearCurrentSession, getAccessToken } from "./session";
 import type { ApiProblem } from "../types/api";
 
 const rawBaseUrl = import.meta.env.VITE_API_URL;
@@ -59,18 +59,14 @@ async function parseResponse<T>(response: Response): Promise<T> {
 export async function apiRequest<T>(path: string, init?: RequestInit): Promise<T> {
   const url = buildUrl(path);
   const headers = new Headers(init?.headers);
-  const currentUser = getCurrentUser();
+  const accessToken = getAccessToken();
 
   if (!headers.has("Content-Type") && init?.body !== undefined) {
     headers.set("Content-Type", "application/json; charset=utf-8");
   }
 
-  if (currentUser?.idUsuario && !headers.has("X-User-Id")) {
-    headers.set("X-User-Id", String(currentUser.idUsuario));
-  }
-
-  if (currentUser?.idInstituicao && !headers.has("X-Institution-Id")) {
-    headers.set("X-Institution-Id", String(currentUser.idInstituicao));
+  if (accessToken && !headers.has("Authorization")) {
+    headers.set("Authorization", `Bearer ${accessToken}`);
   }
 
   if (API_DEBUG) {
@@ -82,6 +78,10 @@ export async function apiRequest<T>(path: string, init?: RequestInit): Promise<T
       ...init,
       headers,
     });
+
+    if (response.status === 401) {
+      clearCurrentSession();
+    }
 
     return await parseResponse<T>(response);
   } catch (error) {

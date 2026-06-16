@@ -2,7 +2,6 @@ import { FormEvent, useState } from "react";
 import { Link } from "react-router";
 import { ArrowLeft, Mail, MapPin } from "lucide-react";
 import { toast } from "sonner";
-import { formatDateTime } from "../lib/formatters";
 import { isValidEmail } from "../lib/validators";
 import { authService } from "../services/authService";
 import type { PasswordRecoveryResponse } from "../types/api";
@@ -63,7 +62,7 @@ export function ForgotPasswordPage() {
               <button type="submit" disabled={loading} className="w-full rounded-lg bg-gradient-to-r from-blue-500 to-blue-600 py-3 font-medium text-white shadow-md transition-all hover:from-blue-600 hover:to-blue-700 hover:shadow-lg disabled:opacity-70">{loading ? "Enviando..." : "Enviar link"}</button>
             </form>
 
-            {result && <div className="mt-6 space-y-2 rounded-xl border border-blue-100 bg-blue-50 p-4 text-sm text-blue-900"><p className="font-medium">Entrega configurada em modo mock funcional.</p><p>Destino: {result.email}</p><p>Token: <span className="break-all font-mono">{result.recoveryToken}</span></p><p>Expira em: {formatDateTime(result.expiresAt)}</p></div>}
+            {result && <div className="mt-6 space-y-2 rounded-xl border border-blue-100 bg-blue-50 p-4 text-sm text-blue-900"><p className="font-medium">Solicitação registrada com segurança.</p><p>{result.message}</p></div>}
 
             <div className="mt-6 text-center"><Link to="/login" className="inline-flex items-center gap-2 font-medium text-blue-600 hover:text-blue-700"><ArrowLeft className="h-4 w-4" />Voltar ao login</Link></div>
           </div>

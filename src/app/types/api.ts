@@ -54,14 +54,19 @@ export interface Usuario {
   email: string;
   senhaHash?: string | null;
   primeiroAcesso?: boolean | null;
-  tokenDefinicaoSenha?: string | null;
-  tokenExpiracao?: string | null;
   ultimoLoginEm?: string | null;
   ativo?: boolean | null;
   podeReservar?: boolean | null;
   adminPlataforma?: boolean | null;
   criadoEm?: string;
   atualizadoEm?: string;
+}
+
+export interface AuthSession {
+  accessToken: string;
+  tokenType: string;
+  expiresAt: string;
+  usuario: Usuario;
 }
 
 export interface Espaco {
@@ -109,10 +114,7 @@ export interface ApiProblem {
 
 export interface PasswordRecoveryResponse {
   message: string;
-  email: string;
   deliveryMode: string;
-  recoveryToken: string;
-  expiresAt: string;
 }
 
 export interface AppNotification {

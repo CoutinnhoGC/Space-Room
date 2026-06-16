@@ -11,7 +11,7 @@ function sanitizeReservaPayload(payload: Reserva) {
   return {
     ...payload,
     idInstituicao: currentUser.idInstituicao,
-    idUsuario: currentUser.idUsuario ?? payload.idUsuario,
+    idUsuario: payload.idUsuario ?? currentUser.idUsuario ?? 0,
   };
 }
 

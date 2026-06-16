@@ -1,5 +1,5 @@
 import { apiRequest } from "../lib/api";
-import type { PasswordRecoveryResponse, Usuario } from "../types/api";
+import type { AuthSession, PasswordRecoveryResponse, Usuario } from "../types/api";
 
 interface LoginPayload {
   email: string;
@@ -12,9 +12,14 @@ interface ForgotPasswordPayload {
 
 export const authService = {
   login: (payload: LoginPayload) =>
-    apiRequest<Usuario>("/auth/login", {
+    apiRequest<AuthSession>("/auth/login", {
       method: "POST",
       body: JSON.stringify(payload),
+    }),
+  me: () => apiRequest<Usuario>("/auth/me"),
+  logout: () =>
+    apiRequest<void>("/auth/logout", {
+      method: "POST",
     }),
   forgotPassword: (payload: ForgotPasswordPayload) =>
     apiRequest<PasswordRecoveryResponse>("/auth/forgot-password", {

@@ -98,7 +98,7 @@ export function ConfiguracoesPage() {
         ...user,
         nome: profileForm.nome.trim(),
         email: profileForm.email.trim(),
-        senhaHash: profileForm.novaSenha.trim() || user.senhaHash,
+        senhaHash: profileForm.novaSenha.trim() || undefined,
       });
       setUser(updated);
       setCurrentUser(updated);

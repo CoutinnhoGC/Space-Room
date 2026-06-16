@@ -2,7 +2,7 @@ import { Eye, EyeOff, Lock, Mail, MapPin } from "lucide-react";
 import { FormEvent, useState } from "react";
 import { Link, useNavigate } from "react-router";
 import { toast } from "sonner";
-import { setCurrentUser } from "../lib/session";
+import { setAuthenticatedSession } from "../lib/session";
 import { isValidEmail } from "../lib/validators";
 import { authService } from "../services/authService";
 
@@ -28,8 +28,8 @@ export function LoginPage() {
 
     try {
       setLoading(true);
-      const usuario = await authService.login({ email: email.trim(), senha });
-      setCurrentUser(usuario);
+      const session = await authService.login({ email: email.trim(), senha });
+      setAuthenticatedSession(session);
       toast.success("Login realizado com sucesso.");
       navigate("/", { replace: true });
     } catch (error) {
