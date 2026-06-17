@@ -1,0 +1,30 @@
+[33m[vite:css][postcss] E:\SpaceRoomGit\Space-Room\src\styles\fonts.css is empty
+1  |  @import './fonts.css';
+   |  ^^^^^^^^^^^^^^^^^^^^^^
+2  |  @import './tailwind.css';
+3  |  @import './theme.css';[39m
+[33m[vite:css][postcss] @import must precede all other statements (besides @charset or empty @layer)
+2  |  @import './tailwind.css';
+3  |  @import './theme.css';
+4  |  
+   |  ^[39m
+[33m[vite:css][postcss] E:\SpaceRoomGit\Space-Room\src\styles\fonts.css is empty
+1  |  @import './fonts.css';
+   |  ^^^^^^^^^^^^^^^^^^^^^^
+2  |  @import './tailwind.css';
+3  |  @import './theme.css';[39m
+[33m[vite:css][postcss] @import must precede all other statements (besides @charset or empty @layer)
+2  |  @import './tailwind.css';
+3  |  @import './theme.css';
+4  |  
+   |  ^[39m
+[33m[vite:css][postcss] E:\SpaceRoomGit\Space-Room\src\styles\fonts.css is empty
+1  |  @import './fonts.css';
+   |  ^^^^^^^^^^^^^^^^^^^^^^
+2  |  @import './tailwind.css';
+3  |  @import './theme.css';[39m
+[33m[vite:css][postcss] @import must precede all other statements (besides @charset or empty @layer)
+2  |  @import './tailwind.css';
+3  |  @import './theme.css';
+4  |  
+   |  ^[39m

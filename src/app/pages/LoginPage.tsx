@@ -1,4 +1,4 @@
-import { Eye, EyeOff, Lock, Mail, MapPin } from "lucide-react";
+import { Eye, EyeOff, Info, Lock, Mail, MapPin } from "lucide-react";
 import { FormEvent, useState } from "react";
 import { Link, useNavigate } from "react-router";
 import { toast } from "sonner";
@@ -12,6 +12,7 @@ export function LoginPage() {
   const [senha, setSenha] = useState("");
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const [showFirstAccessHelp, setShowFirstAccessHelp] = useState(false);
 
   const handleSubmit = async (event: FormEvent) => {
     event.preventDefault();
@@ -73,7 +74,20 @@ export function LoginPage() {
             <button type="submit" disabled={loading} className="w-full rounded-lg bg-gradient-to-r from-blue-500 to-blue-600 py-3 font-medium text-white shadow-md transition-all hover:from-blue-600 hover:to-blue-700 hover:shadow-lg disabled:opacity-70">{loading ? "Entrando..." : "Entrar"}</button>
           </form>
 
-          <div className="mt-6 text-center"><Link to="/esqueci-senha" className="font-medium text-blue-600 hover:text-blue-700">Esqueci minha senha</Link></div>
+          {showFirstAccessHelp && (
+            <div className="mt-6 rounded-xl border border-blue-100 bg-blue-50 p-4 text-sm text-blue-900">
+              <div className="mb-1 flex items-center gap-2 font-medium"><Info className="h-4 w-4" />Primeiro acesso</div>
+              Entre em contato com o administrador da sua instituicao para solicitar acesso. Por seguranca, contas novas devem ser criadas por um responsavel autorizado.
+            </div>
+          )}
+
+          <div className="mt-6 flex flex-wrap items-center justify-center gap-4 text-sm">
+            <button type="button" onClick={() => setShowFirstAccessHelp((current) => !current)} className="font-medium text-blue-600 hover:text-blue-700">Primeiro acesso?</button>
+            <Link to="/esqueci-senha" className="font-medium text-blue-600 hover:text-blue-700">Esqueci minha senha</Link>
+          </div>
+          <div className="mt-4 text-center">
+            <Link to="/plataforma" className="inline-flex rounded-lg border border-blue-200 px-4 py-2 text-sm font-semibold text-blue-700 transition-colors hover:bg-blue-50">Conhecer a Plataforma</Link>
+          </div>
         </div>
 
         <div className="mt-6 text-center text-sm text-gray-500">SpaceRoom V2.1</div>

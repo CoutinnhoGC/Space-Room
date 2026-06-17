@@ -9,6 +9,7 @@ import { EspacosPage } from "./pages/EspacosPage";
 import { ForgotPasswordPage } from "./pages/ForgotPasswordPage";
 import { HomePage } from "./pages/HomePage";
 import { InstituicoesPage } from "./pages/InstituicoesPage";
+import { LandingPage } from "./pages/LandingPage";
 import { LoginPage } from "./pages/LoginPage";
 import { NovaReservaPage } from "./pages/NovaReservaPage";
 import { PerfilPage } from "./pages/PerfilPage";
@@ -27,6 +28,10 @@ export const router = createBrowserRouter([
       {
         path: "/esqueci-senha",
         Component: ForgotPasswordPage,
+      },
+      {
+        path: "/plataforma",
+        Component: LandingPage,
       },
     ],
   },

@@ -23,6 +23,10 @@ export interface Cargo {
   idCargo: number;
   nome: string;
   descricao?: string | null;
+  idInstituicao?: number | null;
+  tipoInstituicao?: TipoInstituicao | null;
+  sistema?: boolean | null;
+  personalizado?: boolean | null;
   ativo?: boolean | null;
 }
 
@@ -58,6 +62,11 @@ export interface Usuario {
   ativo?: boolean | null;
   podeReservar?: boolean | null;
   adminPlataforma?: boolean | null;
+  podeGerenciarUsuarios?: boolean | null;
+  podeGerenciarEspacos?: boolean | null;
+  podeAprovarReservas?: boolean | null;
+  podeGerenciarComunicados?: boolean | null;
+  podeVisualizarAuditoria?: boolean | null;
   criadoEm?: string;
   atualizadoEm?: string;
 }

@@ -3,7 +3,7 @@ import { Eye, Mail, Plus, Save, Search, Shield, Trash2, UserCheck, UserRound, X,
 import { toast } from "sonner";
 import { DetailPanel } from "../components/DetailPanel";
 import { getInitials } from "../lib/formatters";
-import { canChooseInstitution, filterByInstitution, inferDefaultReservationPermission, isPlatformAdmin } from "../lib/permissions";
+import { canChooseInstitution, canManageUsers, filterByInstitution, getAssignableRoles, inferDefaultReservationPermission, isPlatformAdmin, isPlatformAdminRole } from "../lib/permissions";
 import { getCurrentUser } from "../lib/session";
 import { isValidEmail, validatePositiveId } from "../lib/validators";
 import { cargoService } from "../services/cargoService";
@@ -40,8 +40,18 @@ export function UsuariosPage() {
   );
 
   const visibleUsers = useMemo(
-    () => filterByInstitution(usuarios, currentUser, (item) => item.idInstituicao),
+    () => filterByInstitution(usuarios, currentUser, (item) => item.idInstituicao).filter((user) => isPlatformAdmin(currentUser) || user.adminPlataforma !== true),
     [usuarios, currentUser],
+  );
+
+  const selectedInstitution = useMemo(
+    () => instituicoes.find((item) => item.idInstituicao === Number(form.idInstituicao)) ?? visibleInstitutions[0] ?? null,
+    [form.idInstituicao, instituicoes, visibleInstitutions],
+  );
+
+  const assignableRoles = useMemo(
+    () => getAssignableRoles(cargos, selectedInstitution, currentUser),
+    [cargos, selectedInstitution, currentUser],
   );
 
   const loadData = async () => {
@@ -57,7 +67,8 @@ export function UsuariosPage() {
       setInstituicoes(instituicoesData);
 
       const institutionId = currentUser?.idInstituicao ?? instituicoesData[0]?.idInstituicao ?? "";
-      const cargoId = cargosData[0]?.idCargo ?? "";
+      const defaultInstitution = instituicoesData.find((item) => item.idInstituicao === Number(institutionId)) ?? instituicoesData[0] ?? null;
+      const cargoId = getAssignableRoles(cargosData, defaultInstitution, currentUser)[0]?.idCargo ?? "";
       setForm((current) => ({
         ...current,
         idCargo: current.idCargo || String(cargoId),
@@ -98,7 +109,7 @@ export function UsuariosPage() {
 
   const resetForm = () => {
     const defaultInstitution = currentUser?.idInstituicao ?? visibleInstitutions[0]?.idInstituicao ?? "";
-    const defaultCargo = cargos[0]?.idCargo ?? "";
+    const defaultCargo = getAssignableRoles(cargos, visibleInstitutions.find((item) => item.idInstituicao === Number(defaultInstitution)), currentUser)[0]?.idCargo ?? "";
     setForm({
       ...emptyForm,
       idCargo: String(defaultCargo),
@@ -110,6 +121,12 @@ export function UsuariosPage() {
   };
 
   const handleEdit = (usuario: Usuario) => {
+    const cargo = cargos.find((item) => item.idCargo === usuario.idCargo);
+    if (!isPlatformAdmin(currentUser) && (usuario.adminPlataforma === true || isPlatformAdminRole(cargo))) {
+      toast.error("Somente administradores da plataforma podem alterar administradores da plataforma.");
+      return;
+    }
+
     setForm({
       idUsuario: String(usuario.idUsuario ?? ""),
       nome: usuario.nome,
@@ -128,6 +145,13 @@ export function UsuariosPage() {
       return;
     }
 
+    const usuario = usuarios.find((item) => item.idUsuario === idUsuario);
+    const cargo = cargos.find((item) => item.idCargo === usuario?.idCargo);
+    if (!isPlatformAdmin(currentUser) && (usuario?.adminPlataforma === true || isPlatformAdminRole(cargo))) {
+      toast.error("Somente administradores da plataforma podem remover administradores da plataforma.");
+      return;
+    }
+
     try {
       await usuarioService.remove(idUsuario);
       toast.success("Usuário removido com sucesso.");
@@ -139,7 +163,7 @@ export function UsuariosPage() {
 
   const openNewUserForm = () => {
     const defaultInstitution = currentUser?.idInstituicao ?? visibleInstitutions[0]?.idInstituicao ?? "";
-    const defaultCargo = cargos[0]?.idCargo ?? "";
+    const defaultCargo = getAssignableRoles(cargos, visibleInstitutions.find((item) => item.idInstituicao === Number(defaultInstitution)), currentUser)[0]?.idCargo ?? "";
     setSelectedUser(null);
     setShowForm(true);
     setForm({
@@ -181,6 +205,17 @@ export function UsuariosPage() {
       return;
     }
 
+    if (!canManageUsers(currentUser)) {
+      toast.error("Seu perfil nao possui permissao para gerenciar usuarios.");
+      return;
+    }
+
+    const cargoSelecionado = cargos.find((item) => item.idCargo === Number(form.idCargo));
+    if (!isPlatformAdmin(currentUser) && isPlatformAdminRole(cargoSelecionado)) {
+      toast.error("Somente administradores da plataforma podem criar ou editar administradores da plataforma.");
+      return;
+    }
+
     try {
       setSaving(true);
       const payload: Usuario = {
@@ -212,6 +247,7 @@ export function UsuariosPage() {
   };
 
   const platformAdmin = isPlatformAdmin(currentUser);
+  const userCanManageUsers = canManageUsers(currentUser);
   const showInstitutionSelector = canChooseInstitution(currentUser, visibleInstitutions.length);
 
   return (
@@ -222,7 +258,7 @@ export function UsuariosPage() {
             <h1 className="text-2xl font-semibold text-gray-900 dark:text-slate-100">Usuários</h1>
             <p className="mt-1 text-sm text-gray-500 dark:text-slate-400">Gerencie os usuários da sua instituição e escolha quem pode reservar.</p>
           </div>
-          <button onClick={openNewUserForm} className="flex items-center gap-2 rounded-lg bg-gradient-to-r from-blue-500 to-blue-600 px-4 py-2.5 text-white shadow-sm transition-all hover:from-blue-600 hover:to-blue-700">
+          <button onClick={openNewUserForm} disabled={!userCanManageUsers} className="flex items-center gap-2 rounded-lg bg-gradient-to-r from-blue-500 to-blue-600 px-4 py-2.5 text-white shadow-sm transition-all hover:from-blue-600 hover:to-blue-700 disabled:opacity-60">
             <Plus className="h-4 w-4" />
             Novo usuário
           </button>
@@ -245,7 +281,7 @@ export function UsuariosPage() {
             <input value={form.email} onChange={(event) => setForm((current) => ({ ...current, email: event.target.value }))} placeholder="E-mail" className="rounded-lg border border-gray-200 bg-gray-50 px-4 py-3 text-gray-900 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100" />
             <input value={form.senhaHash} onChange={(event) => setForm((current) => ({ ...current, senhaHash: event.target.value }))} placeholder={form.idUsuario ? "Nova senha (opcional)" : "Senha inicial"} className="rounded-lg border border-gray-200 bg-gray-50 px-4 py-3 text-gray-900 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100" />
             <select value={form.idCargo} onChange={(event) => handleInstitutionOrRoleChange({ idCargo: event.target.value })} className="rounded-lg border border-gray-200 bg-gray-50 px-4 py-3 text-gray-700 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100">
-              {cargos.map((cargo) => <option key={cargo.idCargo} value={cargo.idCargo}>{cargo.nome}</option>)}
+              {assignableRoles.map((cargo) => <option key={cargo.idCargo} value={cargo.idCargo}>{cargo.nome}</option>)}
             </select>
             {showInstitutionSelector ? <select value={form.idInstituicao} onChange={(event) => handleInstitutionOrRoleChange({ idInstituicao: event.target.value })} className="rounded-lg border border-gray-200 bg-gray-50 px-4 py-3 text-gray-700 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100" disabled={!platformAdmin}>
               {visibleInstitutions.map((instituicao) => <option key={instituicao.idInstituicao} value={instituicao.idInstituicao}>{instituicao.nomeFantasia}</option>)}
@@ -261,10 +297,10 @@ export function UsuariosPage() {
               Pode reservar espaços
             </label>
             <div className="text-xs text-gray-500 md:col-span-2 dark:text-slate-400">
-              Cargos como diretor, vice, docente, dono e gerente recebem permissão de reserva por padrão. Aqui você pode liberar ou bloquear individualmente.
+              Os cargos listados respeitam o tipo da instituição e ocultam cargos de sistema da plataforma para usuários institucionais.
             </div>
             <div className="md:col-span-2 flex items-center gap-3">
-              <button type="submit" disabled={saving} className="flex items-center gap-2 rounded-lg bg-gradient-to-r from-blue-500 to-blue-600 px-5 py-3 text-white disabled:opacity-70">
+              <button type="submit" disabled={saving || !userCanManageUsers} className="flex items-center gap-2 rounded-lg bg-gradient-to-r from-blue-500 to-blue-600 px-5 py-3 text-white disabled:opacity-70">
                 <Save className="h-4 w-4" />
                 {saving ? "Salvando..." : "Salvar"}
               </button>
@@ -296,6 +332,8 @@ export function UsuariosPage() {
           <tbody className="divide-y divide-gray-100 dark:divide-slate-800">
             {!loading && filteredUsers.map((user) => {
               const cargo = cargos.find((item) => item.idCargo === user.idCargo);
+              const protectedPlatformAdmin = user.adminPlataforma === true || isPlatformAdminRole(cargo);
+              const canModifyRow = platformAdmin || !protectedPlatformAdmin;
               return (
                 <tr key={user.idUsuario} className="transition-colors hover:bg-gray-50 dark:hover:bg-slate-900/60">
                   <td className="px-6 py-4">
@@ -311,8 +349,8 @@ export function UsuariosPage() {
                   <td className="px-6 py-4">
                     <div className="flex items-center justify-end gap-2">
                       <button onClick={() => setSelectedUser(user)} className="rounded p-1.5 text-gray-600 hover:bg-gray-100 dark:text-slate-300 dark:hover:bg-slate-800" title="Visualizar usuário" type="button"><Eye className="h-4 w-4" /></button>
-                      <button onClick={() => handleEdit(user)} className="rounded p-1.5 text-blue-600 hover:bg-blue-50 dark:text-blue-300 dark:hover:bg-blue-950/40" title="Editar usuário" type="button"><Edit2 className="h-4 w-4" /></button>
-                      <button onClick={() => handleDelete(user.idUsuario)} className="rounded p-1.5 text-red-600 hover:bg-red-50 dark:text-red-300 dark:hover:bg-red-950/40" title="Excluir usuário" type="button"><Trash2 className="h-4 w-4" /></button>
+                      {canModifyRow && <button onClick={() => handleEdit(user)} className="rounded p-1.5 text-blue-600 hover:bg-blue-50 dark:text-blue-300 dark:hover:bg-blue-950/40" title="Editar usuário" type="button"><Edit2 className="h-4 w-4" /></button>}
+                      {canModifyRow && <button onClick={() => handleDelete(user.idUsuario)} className="rounded p-1.5 text-red-600 hover:bg-red-50 dark:text-red-300 dark:hover:bg-red-950/40" title="Excluir usuário" type="button"><Trash2 className="h-4 w-4" /></button>}
                     </div>
                   </td>
                 </tr>
