@@ -88,8 +88,13 @@ export async function apiRequest<T>(path: string, init?: RequestInit): Promise<T
     headers.set("Authorization", `Bearer ${accessToken}`);
   }
 
+  const method = init?.method ?? "GET";
+
   if (API_DEBUG) {
-    console.debug(`[api] ${init?.method ?? "GET"} ${url}`);
+    console.debug("[api] request", {
+      method,
+      url,
+    });
   }
 
   try {
@@ -106,7 +111,11 @@ export async function apiRequest<T>(path: string, init?: RequestInit): Promise<T
   } catch (error) {
     if (error instanceof ApiError) {
       if (API_DEBUG) {
-        console.error(`[api] ${init?.method ?? "GET"} ${url} failed`, error);
+        console.error("[api] request failed", {
+          method,
+          url,
+          error,
+        });
       }
       throw error;
     }
@@ -118,7 +127,11 @@ export async function apiRequest<T>(path: string, init?: RequestInit): Promise<T
     );
 
     if (API_DEBUG) {
-      console.error(`[api] ${init?.method ?? "GET"} ${url} failed`, error);
+      console.error("[api] request failed", {
+        method,
+        url,
+        error,
+      });
     }
 
     throw connectionError;

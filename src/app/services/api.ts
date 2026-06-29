@@ -70,7 +70,11 @@ async function request<T>(method: string, path: string, data?: BodyInit | Record
   }
 
   if (API_DEBUG) {
-    console.debug(`[api] ${method} ${url}`, data);
+    console.debug("[api] request", {
+      method,
+      url,
+      data,
+    });
   }
 
   try {
@@ -85,7 +89,11 @@ async function request<T>(method: string, path: string, data?: BodyInit | Record
   } catch (error) {
     if (error instanceof ApiError) {
       if (API_DEBUG) {
-        console.error(`[api] ${method} ${url} failed`, error);
+        console.error("[api] request failed", {
+          method,
+          url,
+          error,
+        });
       }
       throw error;
     }
@@ -97,7 +105,11 @@ async function request<T>(method: string, path: string, data?: BodyInit | Record
     );
 
     if (API_DEBUG) {
-      console.error(`[api] ${method} ${url} failed`, error);
+      console.error("[api] request failed", {
+        method,
+        url,
+        error,
+      });
     }
 
     throw connectionError;
