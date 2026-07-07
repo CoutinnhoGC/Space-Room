@@ -4,7 +4,11 @@ import type { ApiProblem } from "../types/api";
 const rawBaseUrl = import.meta.env.VITE_API_URL;
 
 function normalizeBaseUrl(url?: string) {
-  return (url ?? "").trim().replace(/\/+$/, "");
+  const normalized = (url ?? "").trim().replace(/\/+$/, "");
+  if (import.meta.env.PROD && normalized.includes("onrender.com")) {
+    return "/api";
+  }
+  return normalized;
 }
 
 export const BASE_URL = normalizeBaseUrl(rawBaseUrl);
