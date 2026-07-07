@@ -24,7 +24,7 @@ export function isPlatformAdminRole(cargo: Cargo | null | undefined) {
     return false;
   }
 
-  return cargo.sistema === true && platformAdminRoles.has(normalize(cargo.nome));
+  return platformAdminRoles.has(normalize(cargo.nome));
 }
 
 export function isInstitutionAdminRole(cargo: Cargo | null | undefined) {
