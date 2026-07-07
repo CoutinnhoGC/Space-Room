@@ -32,7 +32,7 @@ export function BrandLogo({ size = "md", showText = true, className = "" }: Bran
 
   return (
     <div className={`flex min-w-0 items-center gap-3 ${className}`}>
-      <div className={`${classes.frame} flex flex-none items-center justify-center rounded-2xl bg-white/90 shadow-lg shadow-blue-950/10 ring-1 ring-blue-100`}>
+      <div className={`${classes.frame} flex flex-none items-center justify-center`}>
         <img src="/spaceroom-logo.png" alt="SpaceRoom" className={`${classes.image} object-contain`} />
       </div>
       {showText && (
