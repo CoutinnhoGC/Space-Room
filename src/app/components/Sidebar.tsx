@@ -1,5 +1,6 @@
 import { Building2, Calendar, CalendarDays, ChevronLeft, ChevronRight, Home, LayoutDashboard, MapPin, Settings, Users, BarChart3 } from "lucide-react";
 import { Link } from "react-router";
+import { BrandLogo } from "./BrandLogo";
 
 interface SidebarProps {
   isOpen: boolean;
@@ -47,16 +48,9 @@ export function Sidebar({ isOpen, collapsed, activeItem, onItemClick, onToggleCo
       <aside
         className={`fixed left-0 top-0 z-50 flex h-screen w-64 flex-col border-r border-gray-100 bg-white transition-transform duration-300 ease-in-out dark:border-slate-800 dark:bg-slate-950 lg:sticky lg:z-30 ${isOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"} ${collapsed ? "lg:w-20" : "lg:w-64"}`}
       >
-        <div className="flex h-16 items-center justify-between border-b border-gray-100 px-4 dark:border-slate-800">
+        <div className={`flex h-20 items-center justify-between border-b border-gray-100 px-4 dark:border-slate-800 ${collapsed ? "lg:px-3" : ""}`}>
           <Link to="/" onClick={onItemClick} className="flex min-w-0 items-center gap-3 overflow-hidden">
-            <div className="flex h-8 w-8 flex-none items-center justify-center rounded-lg bg-gradient-to-br from-blue-400 to-blue-600">
-              <MapPin className="h-5 w-5 flex-none text-white" />
-            </div>
-            {!collapsed && (
-              <div>
-                <h1 className="bg-gradient-to-r from-blue-500 to-blue-700 bg-clip-text text-lg font-semibold text-transparent">SpaceRoom</h1>
-              </div>
-            )}
+            <BrandLogo size="sm" showText={!collapsed} />
           </Link>
 
           <button type="button" onClick={onToggleCollapse} className="hidden rounded-lg p-2 text-gray-500 transition-colors hover:bg-gray-100 dark:text-slate-400 dark:hover:bg-slate-900 lg:flex" title={collapsed ? "Expandir menu" : "Recolher menu"}>

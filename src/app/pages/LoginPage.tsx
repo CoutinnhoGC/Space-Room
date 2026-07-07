@@ -1,7 +1,8 @@
-import { Eye, EyeOff, Info, Lock, Mail, MapPin } from "lucide-react";
+import { Eye, EyeOff, Info, Lock, Mail } from "lucide-react";
 import { FormEvent, useState } from "react";
 import { Link, useNavigate } from "react-router";
 import { toast } from "sonner";
+import { BrandLogo } from "../components/BrandLogo";
 import { setAuthenticatedSession } from "../lib/session";
 import { isValidEmail } from "../lib/validators";
 import { authService } from "../services/authService";
@@ -45,8 +46,7 @@ export function LoginPage() {
     <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-blue-50 to-blue-100 p-4 text-gray-900">
       <div className="w-full max-w-md">
         <div className="mb-8 text-center">
-          <div className="mb-4 inline-flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-blue-500 to-blue-700 shadow-lg"><MapPin className="h-8 w-8 text-white" /></div>
-          <h1 className="mb-2 bg-gradient-to-r from-blue-600 to-blue-800 bg-clip-text text-3xl font-bold text-transparent">SpaceRoom</h1>
+          <BrandLogo size="lg" className="mb-4 justify-center" />
           <p className="text-gray-600">Acesse sua conta para entrar no ambiente interno.</p>
         </div>
 

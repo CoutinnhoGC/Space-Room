@@ -1,7 +1,8 @@
 import { FormEvent, useEffect, useMemo, useState } from "react";
 import { Link, useNavigate } from "react-router";
-import { MapPin, Mail, Lock, User, Building2, Shield } from "lucide-react";
+import { Mail, Lock, User, Building2, Shield } from "lucide-react";
 import { toast } from "sonner";
+import { BrandLogo } from "../components/BrandLogo";
 import { inferDefaultReservationPermission } from "../lib/permissions";
 import { setCurrentUser } from "../lib/session";
 import { isValidEmail, sanitizeFullName, validateFullName } from "../lib/validators";
@@ -111,12 +112,7 @@ export function CadastroPage() {
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-blue-100 flex items-center justify-center p-4">
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-blue-500 to-blue-700 rounded-2xl mb-4 shadow-lg">
-            <MapPin className="w-8 h-8 text-white" />
-          </div>
-          <h1 className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-blue-800 bg-clip-text text-transparent mb-2">
-            SpaceRoom
-          </h1>
+          <BrandLogo size="lg" className="mb-4 justify-center" />
           <p className="text-gray-600">Crie sua conta e comece a gerenciar espaços</p>
         </div>
 

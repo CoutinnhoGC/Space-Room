@@ -1,5 +1,6 @@
 import { BarChart3, CalendarCheck, ClipboardCheck, KeyRound, MapPin, ShieldCheck } from "lucide-react";
 import { Link } from "react-router";
+import { BrandLogo } from "../components/BrandLogo";
 
 const features = [
   { icon: MapPin, title: "Controle de espaços", text: "Cadastre salas, laboratórios, auditórios, coworkings e subespaços hierárquicos." },
@@ -15,8 +16,7 @@ export function LandingPage() {
     <div className="min-h-screen bg-[radial-gradient(circle_at_top_left,#dbeafe,transparent_34%),linear-gradient(135deg,#f8fafc_0%,#e0f2fe_45%,#fefce8_100%)] text-slate-950">
       <header className="mx-auto flex max-w-6xl items-center justify-between px-6 py-6">
         <Link to="/login" className="flex items-center gap-3">
-          <span className="flex h-10 w-10 items-center justify-center rounded-2xl bg-blue-600 text-white shadow-lg"><MapPin className="h-5 w-5" /></span>
-          <span className="text-lg font-bold">SpaceRoom</span>
+          <BrandLogo size="sm" />
         </Link>
         <Link to="/login" className="rounded-full border border-slate-300 bg-white/70 px-4 py-2 text-sm font-semibold text-slate-700 backdrop-blur hover:bg-white">Entrar</Link>
       </header>
