@@ -1,9 +1,10 @@
 import { apiRequest, cachedApiRequest, invalidateApiCache } from "../lib/api";
 import { CACHE_TTL } from "./cacheConfig";
-import type { Instituicao } from "../types/api";
+import type { Instituicao, InstituicaoResumo } from "../types/api";
 
 export const instituicaoService = {
   list: () => cachedApiRequest<Instituicao[]>("/instituicoes", CACHE_TTL.instituicoes),
+  summary: () => cachedApiRequest<InstituicaoResumo[]>("/instituicoes/resumo", CACHE_TTL.instituicoes),
   getById: (id: number) => cachedApiRequest<Instituicao>(`/instituicoes/${id}`, CACHE_TTL.instituicoes),
   create: (payload: Instituicao) =>
     apiRequest<Instituicao>("/instituicoes", {

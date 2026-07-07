@@ -4,10 +4,8 @@ import { toast } from "sonner";
 import { getTipoInstituicaoLabel } from "../lib/formatters";
 import { canManageInstitutions, filterByInstitution, isPlatformAdmin } from "../lib/permissions";
 import { getCurrentUser } from "../lib/session";
-import { espacoService } from "../services/espacoService";
 import { instituicaoService } from "../services/instituicaoService";
-import { usuarioService } from "../services/usuarioService";
-import type { Espaco, Instituicao, TipoInstituicao, Usuario } from "../types/api";
+import type { Instituicao, InstituicaoResumo, TipoInstituicao } from "../types/api";
 
 const tipos: TipoInstituicao[] = ["INSTITUICAO_ENSINO", "EMPRESA", "ORGAO_PUBLICO", "CENTRO_PESQUISA", "OUTRO"];
 const legacyEducationTypes: TipoInstituicao[] = ["ESCOLA", "FACULDADE", "UNIVERSIDADE", "SENAI"];
@@ -22,9 +20,7 @@ function normalizeInstitutionType(tipo: TipoInstituicao): TipoInstituicao {
 
 export function InstituicoesPage() {
   const currentUser = getCurrentUser();
-  const [instituicoes, setInstituicoes] = useState<Instituicao[]>([]);
-  const [usuarios, setUsuarios] = useState<Usuario[]>([]);
-  const [espacos, setEspacos] = useState<Espaco[]>([]);
+  const [instituicoes, setInstituicoes] = useState<InstituicaoResumo[]>([]);
   const [showForm, setShowForm] = useState(false);
   const [form, setForm] = useState(emptyForm);
   const [search, setSearch] = useState("");
@@ -37,10 +33,8 @@ export function InstituicoesPage() {
   const loadData = async () => {
     try {
       setLoading(true);
-      const [instituicoesData, usuariosData, espacosData] = await Promise.all([instituicaoService.list(), usuarioService.list(), espacoService.list()]);
+      const instituicoesData = await instituicaoService.summary();
       setInstituicoes(instituicoesData);
-      setUsuarios(usuariosData);
-      setEspacos(espacosData);
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Erro ao carregar instituições.");
     } finally {
@@ -51,8 +45,6 @@ export function InstituicoesPage() {
   useEffect(() => { loadData(); }, []);
 
   const visibleInstitutions = useMemo(() => filterByInstitution(instituicoes, currentUser, (item) => item.idInstituicao), [instituicoes, currentUser]);
-  const visibleUsers = useMemo(() => filterByInstitution(usuarios, currentUser, (item) => item.idInstituicao), [usuarios, currentUser]);
-  const visibleSpaces = useMemo(() => filterByInstitution(espacos, currentUser, (item) => item.idInstituicao), [espacos, currentUser]);
   const filtered = useMemo(() => visibleInstitutions.filter((item) => `${item.nomeFantasia} ${item.cidade ?? ""}`.toLowerCase().includes(search.toLowerCase())), [visibleInstitutions, search]);
 
   const resetForm = () => { setForm(emptyForm); setShowForm(false); };
@@ -171,8 +163,8 @@ export function InstituicoesPage() {
 
       <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
         {!loading && filtered.map((institution) => {
-          const totalSpaces = visibleSpaces.filter((item) => item.idInstituicao === institution.idInstituicao).length;
-          const totalUsers = visibleUsers.filter((item) => item.idInstituicao === institution.idInstituicao).length;
+          const totalSpaces = institution.totalEspacos ?? 0;
+          const totalUsers = institution.totalUsuarios ?? 0;
           return (
             <div key={institution.idInstituicao} className="rounded-xl border border-gray-100 bg-white p-6 transition-shadow hover:shadow-md dark:border-slate-800 dark:bg-slate-950">
               <div className="mb-4 flex items-start justify-between">

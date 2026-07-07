@@ -53,6 +53,11 @@ export interface Instituicao {
   atualizadoEm?: string;
 }
 
+export interface InstituicaoResumo extends Instituicao {
+  totalUsuarios: number;
+  totalEspacos: number;
+}
+
 export interface Usuario {
   idUsuario?: number;
   idInstituicao: number;
