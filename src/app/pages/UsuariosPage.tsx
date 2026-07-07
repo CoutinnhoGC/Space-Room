@@ -1,11 +1,11 @@
-﻿import { FormEvent, useEffect, useMemo, useState } from "react";
+import { FormEvent, useEffect, useMemo, useState } from "react";
 import { Eye, Mail, Plus, Save, Search, Shield, Trash2, UserCheck, UserRound, X, Edit2 } from "lucide-react";
 import { toast } from "sonner";
 import { DetailPanel } from "../components/DetailPanel";
 import { getInitials } from "../lib/formatters";
 import { canChooseInstitution, canManageUsers, filterByInstitution, getAssignableRoles, inferDefaultReservationPermission, isPlatformAdmin, isPlatformAdminRole } from "../lib/permissions";
 import { getCurrentUser } from "../lib/session";
-import { isValidEmail, validatePositiveId } from "../lib/validators";
+import { isValidEmail, sanitizeFullName, validateFullName, validatePositiveId } from "../lib/validators";
 import { cargoService } from "../services/cargoService";
 import { instituicaoService } from "../services/instituicaoService";
 import { usuarioService } from "../services/usuarioService";
@@ -193,6 +193,12 @@ export function UsuariosPage() {
       return;
     }
 
+    const nameError = validateFullName(form.nome);
+    if (nameError) {
+      toast.error(nameError);
+      return;
+    }
+
     if (!isValidEmail(form.email)) {
       toast.error("Informe um e-mail válido.");
       return;
@@ -206,7 +212,7 @@ export function UsuariosPage() {
     }
 
     if (!canManageUsers(currentUser)) {
-      toast.error("Seu perfil nao possui permissao para gerenciar usuarios.");
+      toast.error("Seu perfil não possui permissão para gerenciar usuários.");
       return;
     }
 
@@ -219,7 +225,7 @@ export function UsuariosPage() {
     try {
       setSaving(true);
       const payload: Usuario = {
-        nome: form.nome.trim(),
+        nome: form.nome.trim().replace(/\s+/g, " "),
         email: form.email.trim(),
         senhaHash: form.senhaHash || undefined,
         idInstituicao: Number(form.idInstituicao),
@@ -277,7 +283,7 @@ export function UsuariosPage() {
             </button>
           </div>
           <form className="grid grid-cols-1 gap-4 md:grid-cols-2" onSubmit={handleSubmit}>
-            <input value={form.nome} onChange={(event) => setForm((current) => ({ ...current, nome: event.target.value }))} placeholder="Nome completo" className="rounded-lg border border-gray-200 bg-gray-50 px-4 py-3 text-gray-900 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100" />
+            <input value={form.nome} onChange={(event) => setForm((current) => ({ ...current, nome: sanitizeFullName(event.target.value) }))} placeholder="Nome completo" className="rounded-lg border border-gray-200 bg-gray-50 px-4 py-3 text-gray-900 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100" />
             <input value={form.email} onChange={(event) => setForm((current) => ({ ...current, email: event.target.value }))} placeholder="E-mail" className="rounded-lg border border-gray-200 bg-gray-50 px-4 py-3 text-gray-900 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100" />
             <input value={form.senhaHash} onChange={(event) => setForm((current) => ({ ...current, senhaHash: event.target.value }))} placeholder={form.idUsuario ? "Nova senha (opcional)" : "Senha inicial"} className="rounded-lg border border-gray-200 bg-gray-50 px-4 py-3 text-gray-900 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100" />
             <select value={form.idCargo} onChange={(event) => handleInstitutionOrRoleChange({ idCargo: event.target.value })} className="rounded-lg border border-gray-200 bg-gray-50 px-4 py-3 text-gray-700 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100">

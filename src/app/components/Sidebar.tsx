@@ -48,9 +48,9 @@ export function Sidebar({ isOpen, collapsed, activeItem, onItemClick, onToggleCo
         className={`fixed left-0 top-0 z-50 flex h-screen w-64 flex-col border-r border-gray-100 bg-white transition-transform duration-300 ease-in-out dark:border-slate-800 dark:bg-slate-950 lg:sticky lg:z-30 ${isOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"} ${collapsed ? "lg:w-20" : "lg:w-64"}`}
       >
         <div className="flex h-16 items-center justify-between border-b border-gray-100 px-4 dark:border-slate-800">
-          <Link to="/" onClick={onItemClick} className="flex items-center gap-3 overflow-hidden">
-            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-blue-400 to-blue-600">
-              <MapPin className="h-5 w-5 text-white" />
+          <Link to="/" onClick={onItemClick} className="flex min-w-0 items-center gap-3 overflow-hidden">
+            <div className="flex h-8 w-8 flex-none items-center justify-center rounded-lg bg-gradient-to-br from-blue-400 to-blue-600">
+              <MapPin className="h-5 w-5 flex-none text-white" />
             </div>
             {!collapsed && (
               <div>
@@ -83,10 +83,10 @@ export function Sidebar({ isOpen, collapsed, activeItem, onItemClick, onToggleCo
                       to={item.path}
                       onClick={onItemClick}
                       title={collapsed ? item.label : undefined}
-                      className={`flex w-full items-center rounded-lg px-3 py-2.5 text-sm font-medium transition-all duration-200 ${collapsed ? "justify-center" : "gap-3"} ${isActive ? "bg-blue-50 text-blue-700 dark:bg-blue-950/40 dark:text-blue-300" : "text-gray-600 hover:bg-gray-50 hover:text-gray-900 dark:text-slate-300 dark:hover:bg-slate-900 dark:hover:text-slate-100"}`}
+                      className={`flex h-10 w-full items-center rounded-lg px-3 text-sm font-medium transition-all duration-200 ${collapsed ? "justify-center" : "gap-3"} ${isActive ? "bg-blue-50 text-blue-700 dark:bg-blue-950/40 dark:text-blue-300" : "text-gray-600 hover:bg-gray-50 hover:text-gray-900 dark:text-slate-300 dark:hover:bg-slate-900 dark:hover:text-slate-100"}`}
                     >
-                      <Icon className={`h-5 w-5 ${isActive ? "text-blue-600 dark:text-blue-300" : ""}`} />
-                      {!collapsed && <span>{item.label}</span>}
+                      <Icon className={`h-5 w-5 flex-none ${isActive ? "text-blue-600 dark:text-blue-300" : ""}`} />
+                      {!collapsed && <span className="min-w-0 truncate">{item.label}</span>}
                     </Link>
                   );
                 })}

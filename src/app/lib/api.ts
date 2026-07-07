@@ -27,7 +27,7 @@ export class ApiError extends Error {
 function buildUrl(path: string) {
   if (!BASE_URL) {
     throw new ApiError(
-      "A variavel VITE_API_URL nao foi configurada. Defina a URL da API nas variaveis do frontend.",
+      "A variável VITE_API_URL não foi configurada. Defina a URL da API nas variáveis do frontend.",
       500,
       "Configuracao da API ausente",
     );
@@ -121,7 +121,7 @@ export async function apiRequest<T>(path: string, init?: RequestInit): Promise<T
     }
 
     const connectionError = new ApiError(
-      `Nao foi possivel conectar a API em ${BASE_URL}. Verifique se VITE_API_URL esta apontando para o servico correto.`,
+      `Não foi possível conectar à API em ${BASE_URL}. Verifique se VITE_API_URL está apontando para o serviço correto.`,
       0,
       "API indisponivel",
     );

@@ -24,7 +24,7 @@ export class ApiError extends Error {
 function buildUrl(path: string) {
   if (!BASE_URL) {
     throw new ApiError(
-      "A variavel VITE_API_URL nao foi configurada. Defina a URL do backend no arquivo .env ou nas variaveis da Vercel.",
+      "A variável VITE_API_URL não foi configurada. Defina a URL do backend no arquivo .env ou nas variáveis da Vercel.",
       500,
       "Configuracao da API ausente",
     );
@@ -99,7 +99,7 @@ async function request<T>(method: string, path: string, data?: BodyInit | Record
     }
 
     const connectionError = new ApiError(
-      `Nao foi possivel conectar ao backend em ${BASE_URL}. Verifique se a API esta online e se VITE_API_URL esta correta.`,
+      `Não foi possível conectar ao backend em ${BASE_URL}. Verifique se a API está online e se VITE_API_URL está correta.`,
       0,
       "Backend indisponivel",
     );

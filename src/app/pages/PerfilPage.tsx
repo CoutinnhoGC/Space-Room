@@ -23,7 +23,7 @@ export function PerfilPage() {
       <div className="flex min-h-[400px] items-center justify-center">
         <div className="text-center">
           <User className="mx-auto mb-4 h-16 w-16 text-gray-400 dark:text-slate-500" />
-          <h2 className="text-xl font-semibold text-gray-600 dark:text-slate-300">Usuário não encontrado</h2>
+          <h2 className="text-xl font-semibold text-gray-600 dark:text-slate-300">UsuÃ¡rio nÃ£o encontrado</h2>
         </div>
       </div>
     );
@@ -65,15 +65,15 @@ export function PerfilPage() {
             <div className="flex items-center gap-3">
               <Building className="h-5 w-5 text-gray-400 dark:text-slate-500" />
               <div>
-                <p className="text-sm text-gray-500 dark:text-slate-400">Instituição</p>
-                <p className="font-medium dark:text-slate-100">{instituicao?.nomeFantasia ?? "Não informada"}</p>
+                <p className="text-sm text-gray-500 dark:text-slate-400">InstituiÃ§Ã£o</p>
+                <p className="font-medium dark:text-slate-100">{instituicao?.nomeFantasia ?? "NÃ£o informada"}</p>
               </div>
             </div>
 
             <div className="flex items-center gap-3">
               <Calendar className="h-5 w-5 text-gray-400 dark:text-slate-500" />
               <div>
-                <p className="text-sm text-gray-500 dark:text-slate-400">Último login</p>
+                <p className="text-sm text-gray-500 dark:text-slate-400">Ãšltimo login</p>
                 <p className="font-medium dark:text-slate-100">{currentUser.ultimoLoginEm ? formatDate(currentUser.ultimoLoginEm) : "Nunca"}</p>
               </div>
             </div>
@@ -91,7 +91,7 @@ export function PerfilPage() {
       </div>
 
       <div className="rounded-lg border border-blue-200 bg-blue-50 p-4 dark:border-blue-900/60 dark:bg-blue-950/30">
-        <h3 className="mb-2 font-medium text-blue-900 dark:text-blue-100">Informações do sistema</h3>
+        <h3 className="mb-2 font-medium text-blue-900 dark:text-blue-100">InformaÃ§Ãµes do sistema</h3>
         <p className="text-sm text-blue-700 dark:text-blue-200">Para alterar seus dados, utilize o fluxo administrativo da plataforma.</p>
       </div>
     </div>

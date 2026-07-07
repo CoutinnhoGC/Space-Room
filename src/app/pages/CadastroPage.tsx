@@ -4,7 +4,7 @@ import { MapPin, Mail, Lock, User, Building2, Shield } from "lucide-react";
 import { toast } from "sonner";
 import { inferDefaultReservationPermission } from "../lib/permissions";
 import { setCurrentUser } from "../lib/session";
-import { isValidEmail } from "../lib/validators";
+import { isValidEmail, sanitizeFullName, validateFullName } from "../lib/validators";
 import { cargoService } from "../services/cargoService";
 import { instituicaoService } from "../services/instituicaoService";
 import { usuarioService } from "../services/usuarioService";
@@ -40,7 +40,7 @@ export function CadastroPage() {
           idCargo: current.idCargo || String(cargosData[0]?.idCargo ?? ""),
         }));
       } catch (error) {
-        toast.error(error instanceof Error ? error.message : "Nao foi possivel carregar os dados de apoio.");
+        toast.error(error instanceof Error ? error.message : "Não foi possível carregar os dados de apoio.");
       } finally {
         setLoadingData(false);
       }
@@ -59,29 +59,35 @@ export function CadastroPage() {
     e.preventDefault();
 
     if (!form.nome.trim() || !form.email.trim() || !form.senha.trim() || !form.confirmarSenha.trim()) {
-      toast.error("Preencha todos os campos obrigatorios.");
+      toast.error("Preencha todos os campos obrigatórios.");
+      return;
+    }
+
+    const nameError = validateFullName(form.nome);
+    if (nameError) {
+      toast.error(nameError);
       return;
     }
 
     if (!isValidEmail(form.email)) {
-      toast.error("Informe um e-mail valido.");
+      toast.error("Informe um e-mail válido.");
       return;
     }
 
     if (form.senha !== form.confirmarSenha) {
-      toast.error("As senhas nao coincidem.");
+      toast.error("As senhas não coincidem.");
       return;
     }
 
     if (!canRegister) {
-      toast.error("Cadastre cargos e instituicoes no backend antes de criar usuarios.");
+      toast.error("Cadastre cargos e instituições no backend antes de criar usuários.");
       return;
     }
 
     try {
       setSaving(true);
       const novoUsuario = await usuarioService.create({
-        nome: form.nome.trim(),
+        nome: form.nome.trim().replace(/\s+/g, " "),
         email: form.email.trim(),
         senhaHash: form.senha,
         idInstituicao: Number(form.idInstituicao),
@@ -95,7 +101,7 @@ export function CadastroPage() {
       toast.success("Conta criada com sucesso.");
       navigate("/dashboard");
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Nao foi possivel criar a conta.");
+      toast.error(error instanceof Error ? error.message : "Não foi possível criar a conta.");
     } finally {
       setSaving(false);
     }
@@ -111,7 +117,7 @@ export function CadastroPage() {
           <h1 className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-blue-800 bg-clip-text text-transparent mb-2">
             SpaceRoom
           </h1>
-          <p className="text-gray-600">Crie sua conta e comece a gerenciar espacos</p>
+          <p className="text-gray-600">Crie sua conta e comece a gerenciar espaços</p>
         </div>
 
         <div className="bg-white rounded-2xl shadow-xl p-8">
@@ -127,7 +133,7 @@ export function CadastroPage() {
                 <input
                   type="text"
                   value={form.nome}
-                  onChange={(event) => setForm((current) => ({ ...current, nome: event.target.value }))}
+                  onChange={(event) => setForm((current) => ({ ...current, nome: sanitizeFullName(event.target.value) }))}
                   placeholder="Seu nome completo"
                   className="w-full pl-11 pr-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
                 />
@@ -152,7 +158,7 @@ export function CadastroPage() {
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Instituicao</label>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Instituição</label>
                 <div className="relative">
                   <div className="absolute left-3 top-1/2 -translate-y-1/2">
                     <Building2 className="w-5 h-5 text-gray-400" />
@@ -194,7 +200,7 @@ export function CadastroPage() {
             </div>
 
             <div className="text-sm text-blue-700 bg-blue-50 border border-blue-100 rounded-lg p-3">
-              Perfil inicial de reserva: {reservaPadrao ? "este cargo pode reservar por padrao" : "este cargo comeca apenas com consulta"}.
+              Perfil inicial de reserva: {reservaPadrao ? "este cargo pode reservar por padrão" : "este cargo começa apenas com consulta"}.
             </div>
 
             <div>
@@ -231,7 +237,7 @@ export function CadastroPage() {
 
             {!canRegister && !loadingData && (
               <div className="text-sm text-amber-700 bg-amber-50 border border-amber-200 rounded-lg p-3">
-                O cadastro depende de ao menos uma instituicao e um cargo existentes no backend.
+                O cadastro depende de ao menos uma instituição e um cargo existentes no backend.
               </div>
             )}
 
@@ -245,9 +251,9 @@ export function CadastroPage() {
           </form>
 
           <div className="mt-6 text-center">
-            <span className="text-gray-600">Ja tem uma conta? </span>
+            <span className="text-gray-600">Já tem uma conta? </span>
             <Link to="/login" className="text-blue-600 hover:text-blue-700 font-medium">
-              Faca login
+              Faça login
             </Link>
           </div>
         </div>

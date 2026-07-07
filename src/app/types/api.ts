@@ -1,9 +1,12 @@
 export type TipoInstituicao =
+  | "INSTITUICAO_ENSINO"
   | "ESCOLA"
   | "FACULDADE"
   | "UNIVERSIDADE"
   | "SENAI"
   | "EMPRESA"
+  | "ORGAO_PUBLICO"
+  | "CENTRO_PESQUISA"
   | "COWORKING"
   | "OUTRO";
 

@@ -151,20 +151,20 @@ export function canAssignParentSpace(espacos: Espaco[], space: Pick<Espaco, "idE
   }
 
   if (space.idEspaco && parentId === space.idEspaco) {
-    return { valid: false as const, reason: "Um espaco nao pode ser pai dele mesmo." };
+    return { valid: false as const, reason: "Um espaço não pode ser pai dele mesmo." };
   }
 
   const parent = getSpaceById(espacos, parentId);
   if (!parent) {
-    return { valid: false as const, reason: "O espaco pai informado nao foi encontrado." };
+    return { valid: false as const, reason: "O espaço pai informado não foi encontrado." };
   }
 
   if (parent.idInstituicao !== space.idInstituicao) {
-    return { valid: false as const, reason: "O espaco pai deve pertencer a mesma instituicao." };
+    return { valid: false as const, reason: "O espaço pai deve pertencer à mesma instituição." };
   }
 
   if (space.idEspaco && getDescendantSpaces(espacos, space.idEspaco).some((item) => item.idEspaco === parentId)) {
-    return { valid: false as const, reason: "Nao e possivel criar circularidade na hierarquia." };
+    return { valid: false as const, reason: "Não é possível criar circularidade na hierarquia." };
   }
 
   return { valid: true as const, reason: "" };
@@ -184,7 +184,7 @@ function isAncestorSpace(espacos: Espaco[], ancestorId: number, descendantId: nu
 
 export function getEspacoHierarchyLabel(espaco: Espaco | null | undefined, espacos: Espaco[]) {
   if (!espaco) {
-    return "Espaco nao encontrado";
+    return "Espaço não encontrado";
   }
 
   const names = [...getAncestorSpaces(espacos, espaco.idEspaco).map((item) => item.nome), espaco.nome];
@@ -193,7 +193,7 @@ export function getEspacoHierarchyLabel(espaco: Espaco | null | undefined, espac
 
 export function getReservationSpaceLabel(reserva: Reserva | null | undefined, espacos: Espaco[]) {
   if (!reserva) {
-    return "Espaco nao encontrado";
+    return "Espaço não encontrado";
   }
 
   const reservedSpace = getSpaceById(espacos, resolveReservedSpaceId(reserva));
@@ -229,7 +229,7 @@ export function getReservationConflictDetails(candidate: ReservationCandidate, r
       return {
         conflict: true,
         reason: "SELF",
-        message: "Ja existe uma reserva no proprio espaco para este intervalo.",
+        message: "Já existe uma reserva no próprio espaço para este intervalo.",
         blockingSpace: reservedSpace,
         blockingReservation: reserva,
       };
@@ -239,7 +239,7 @@ export function getReservationConflictDetails(candidate: ReservationCandidate, r
       return {
         conflict: true,
         reason: "PARENT_BLOCKS_CHILD",
-        message: `${reservedSpace.nome} bloqueia este subespaco no intervalo selecionado.`,
+        message: `${reservedSpace.nome} bloqueia este subespaço no intervalo selecionado.`,
         blockingSpace: reservedSpace,
         blockingReservation: reserva,
       };
@@ -249,7 +249,7 @@ export function getReservationConflictDetails(candidate: ReservationCandidate, r
       return {
         conflict: true,
         reason: "CHILD_BLOCKS_PARENT",
-        message: `${reservedSpace.nome} bloqueia o espaco pai neste intervalo.`,
+        message: `${reservedSpace.nome} bloqueia o espaço pai neste intervalo.`,
         blockingSpace: reservedSpace,
         blockingReservation: reserva,
       };
@@ -323,7 +323,7 @@ export function getSpaceAvailabilityDetails(espaco: Espaco, reservas: Reserva[],
       return {
         status: "indisponivel",
         source: "FILHOS_OCUPADOS",
-        message: "Todos os subespacos deste espaco estao ocupados no intervalo.",
+        message: "Todos os subespaços deste espaço estão ocupados no intervalo.",
         blockingSpace: null,
         blockingReservation: null,
       };
@@ -333,7 +333,7 @@ export function getSpaceAvailabilityDetails(espaco: Espaco, reservas: Reserva[],
   return {
     status: "disponivel",
     source: null,
-    message: "Disponivel para reserva.",
+    message: "Disponível para reserva.",
     blockingSpace: null,
     blockingReservation: null,
   };

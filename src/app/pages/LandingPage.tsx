@@ -2,12 +2,12 @@ import { BarChart3, CalendarCheck, ClipboardCheck, KeyRound, MapPin, ShieldCheck
 import { Link } from "react-router";
 
 const features = [
-  { icon: MapPin, title: "Controle de espacos", text: "Cadastre salas, laboratorios, auditorios, coworkings e subespacos hierarquicos." },
+  { icon: MapPin, title: "Controle de espaços", text: "Cadastre salas, laboratórios, auditórios, coworkings e subespaços hierárquicos." },
   { icon: CalendarCheck, title: "Gestao de reservas", text: "Organize solicitacoes, conflitos de horario, cancelamentos e historico operacional." },
   { icon: ShieldCheck, title: "Permissoes RBAC", text: "Separe administradores da plataforma, gestores institucionais e cargos personalizados." },
-  { icon: ClipboardCheck, title: "Aprovacao por espaco", text: "Defina responsaveis e fluxos de validacao para ambientes sensiveis." },
-  { icon: BarChart3, title: "Relatorios", text: "Acompanhe ocupacao, usuarios ativos, reservas pendentes e capacidade disponivel." },
-  { icon: KeyRound, title: "Auditoria", text: "Registre eventos criticos de usuarios, reservas, seguranca e configuracoes." },
+  { icon: ClipboardCheck, title: "Aprovação por espaço", text: "Defina responsáveis e fluxos de validação para ambientes sensíveis." },
+  { icon: BarChart3, title: "Relatórios", text: "Acompanhe ocupação, usuários ativos, reservas pendentes e capacidade disponível." },
+  { icon: KeyRound, title: "Auditoria", text: "Registre eventos críticos de usuários, reservas, segurança e configurações." },
 ];
 
 export function LandingPage() {
@@ -24,9 +24,9 @@ export function LandingPage() {
       <main className="mx-auto max-w-6xl px-6 pb-16">
         <section className="grid items-center gap-10 py-12 lg:grid-cols-[1.08fr_0.92fr]">
           <div>
-            <div className="mb-5 inline-flex rounded-full border border-blue-200 bg-white/70 px-4 py-2 text-sm font-semibold text-blue-700 shadow-sm">Plataforma multiempresa para espacos compartilhados</div>
+            <div className="mb-5 inline-flex rounded-full border border-blue-200 bg-white/70 px-4 py-2 text-sm font-semibold text-blue-700 shadow-sm">Plataforma multiempresa para espaços compartilhados</div>
             <h1 className="max-w-3xl text-4xl font-black tracking-tight text-slate-950 md:text-6xl">Reserve, aprove e audite ambientes com governanca de verdade.</h1>
-            <p className="mt-6 max-w-2xl text-lg leading-8 text-slate-700">O SpaceRoom centraliza controle de espacos, reservas, permissoes e auditoria para escolas, empresas, laboratorios e coworkings, com estrutura preparada para crescimento SaaS.</p>
+            <p className="mt-6 max-w-2xl text-lg leading-8 text-slate-700">O SpaceRoom centraliza controle de espaços, reservas, permissões e auditoria para escolas, empresas, laboratórios e coworkings, com estrutura preparada para crescimento SaaS.</p>
             <div className="mt-8 flex flex-wrap gap-3">
               <a href="mailto:comercial@spaceroom.app?subject=Solicitar demonstracao SpaceRoom" className="rounded-xl bg-blue-600 px-6 py-3 font-semibold text-white shadow-lg shadow-blue-500/20 transition hover:bg-blue-700">Solicitar demonstracao</a>
               <a href="mailto:comercial@spaceroom.app?subject=Contratar SpaceRoom" className="rounded-xl border border-slate-300 bg-white/80 px-6 py-3 font-semibold text-slate-800 transition hover:bg-white">Contratar plataforma</a>
@@ -62,7 +62,7 @@ export function LandingPage() {
           <div className="grid gap-6 md:grid-cols-[1fr_auto] md:items-center">
             <div>
               <h2 className="text-2xl font-black">Planos para crescer com seguranca</h2>
-              <p className="mt-2 text-blue-100">Comece com uma instituicao e evolua para multiunidade, aprovacao avancada, auditoria e modulos comerciais.</p>
+              <p className="mt-2 text-blue-100">Comece com uma instituição e evolua para multiunidade, aprovação avançada, auditoria e módulos comerciais.</p>
             </div>
             <a href="mailto:comercial@spaceroom.app?subject=Entrar em contato SpaceRoom" className="rounded-xl bg-white px-6 py-3 text-center font-semibold text-blue-700 transition hover:bg-blue-50">Entrar em contato</a>
           </div>

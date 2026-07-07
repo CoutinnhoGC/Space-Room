@@ -21,9 +21,9 @@ interface FilterBarProps {
 
 const periodOptions: Array<{ value: DashboardPeriod; label: string }> = [
   { value: "HOJE", label: "Hoje" },
-  { value: "7_DIAS", label: "Ultimos 7 dias" },
-  { value: "30_DIAS", label: "Ultimos 30 dias" },
-  { value: "MES_ATUAL", label: "Mes atual" },
+  { value: "7_DIAS", label: "Últimos 7 dias" },
+  { value: "30_DIAS", label: "Últimos 30 dias" },
+  { value: "MES_ATUAL", label: "Mês atual" },
 ];
 
 const statusOptions: Array<StatusReserva | "TODOS"> = ["TODOS", "CONFIRMADA", "PENDENTE", "CANCELADA", "CONCLUIDA"];
@@ -41,9 +41,9 @@ export function FilterBar({ instituicoes, tiposEspaco, value, onFilterChange, sh
       </div>
 
       <div className={`grid grid-cols-1 gap-4 md:grid-cols-2 ${showInstitutionFilter ? "lg:grid-cols-4" : "lg:grid-cols-3"}`}>
-        {showInstitutionFilter && <div><label className="mb-1.5 block text-xs font-medium text-gray-600 dark:text-slate-400">Instituicao</label><select value={value.institutionId} onChange={(event) => updateField("institutionId", event.target.value)} className={inputClass}><option value="TODAS">Todas as instituicoes</option>{instituicoes.map((instituicao) => <option key={instituicao.idInstituicao} value={instituicao.idInstituicao}>{instituicao.nomeFantasia}</option>)}</select></div>}
-        <div><label className="mb-1.5 block text-xs font-medium text-gray-600 dark:text-slate-400">Periodo</label><select value={value.period} onChange={(event) => updateField("period", event.target.value as DashboardPeriod)} className={inputClass}>{periodOptions.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}</select></div>
-        <div><label className="mb-1.5 block text-xs font-medium text-gray-600 dark:text-slate-400">Tipo de espaco</label><select value={value.spaceType} onChange={(event) => updateField("spaceType", event.target.value as DashboardFilters["spaceType"])} className={inputClass}><option value="TODOS">Todos os tipos</option>{tiposEspaco.map((tipo) => <option key={tipo} value={tipo}>{getTipoEspacoLabel(tipo)}</option>)}</select></div>
+        {showInstitutionFilter && <div><label className="mb-1.5 block text-xs font-medium text-gray-600 dark:text-slate-400">Instituição</label><select value={value.institutionId} onChange={(event) => updateField("institutionId", event.target.value)} className={inputClass}><option value="TODAS">Todas as instituições</option>{instituicoes.map((instituicao) => <option key={instituicao.idInstituicao} value={instituicao.idInstituicao}>{instituicao.nomeFantasia}</option>)}</select></div>}
+        <div><label className="mb-1.5 block text-xs font-medium text-gray-600 dark:text-slate-400">Período</label><select value={value.period} onChange={(event) => updateField("period", event.target.value as DashboardPeriod)} className={inputClass}>{periodOptions.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}</select></div>
+        <div><label className="mb-1.5 block text-xs font-medium text-gray-600 dark:text-slate-400">Tipo de espaço</label><select value={value.spaceType} onChange={(event) => updateField("spaceType", event.target.value as DashboardFilters["spaceType"])} className={inputClass}><option value="TODOS">Todos os tipos</option>{tiposEspaco.map((tipo) => <option key={tipo} value={tipo}>{getTipoEspacoLabel(tipo)}</option>)}</select></div>
         <div><label className="mb-1.5 block text-xs font-medium text-gray-600 dark:text-slate-400">Status da reserva</label><select value={value.status} onChange={(event) => updateField("status", event.target.value as DashboardFilters["status"])} className={inputClass}>{statusOptions.map((status) => <option key={status} value={status}>{status === "TODOS" ? "Todos os status" : getStatusReservaLabel(status)}</option>)}</select></div>
       </div>
     </div>

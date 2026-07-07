@@ -1,4 +1,5 @@
 import { apiRequest, cachedApiRequest, invalidateApiCache } from "../lib/api";
+import { isPlatformAdmin } from "../lib/permissions";
 import { getCurrentUser } from "../lib/session";
 import { CACHE_TTL } from "./cacheConfig";
 import type { Reserva } from "../types/api";
@@ -11,7 +12,7 @@ function sanitizeReservaPayload(payload: Reserva) {
 
   return {
     ...payload,
-    idInstituicao: currentUser.idInstituicao,
+    idInstituicao: isPlatformAdmin(currentUser) ? payload.idInstituicao : currentUser.idInstituicao,
     idUsuario: payload.idUsuario ?? currentUser.idUsuario ?? 0,
   };
 }

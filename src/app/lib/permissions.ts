@@ -1,6 +1,6 @@
 import type { Cargo, Instituicao, TipoInstituicao, Usuario } from "../types/api";
 
-const schoolInstitutionTypes: TipoInstituicao[] = ["ESCOLA", "FACULDADE", "UNIVERSIDADE", "SENAI"];
+const schoolInstitutionTypes: TipoInstituicao[] = ["INSTITUICAO_ENSINO", "ESCOLA", "FACULDADE", "UNIVERSIDADE", "SENAI"];
 const schoolRoles = new Set(["diretor", "diretora", "vice diretor", "vice diretora", "vice-diretor", "vice-diretora", "docente", "professor", "professora", "coordenador", "coordenadora"]);
 const businessRoles = new Set(["dono", "dona", "proprietario", "proprietaria", "socio", "socia", "gerente", "gestor", "gestora", "administrador", "administradora"]);
 const platformAdminRoles = new Set(["administrador da plataforma", "admin plataforma", "super admin"]);
@@ -52,7 +52,7 @@ export function canManageInstitutions(user: Usuario | null | undefined) {
 }
 
 export function canChooseInstitution(user: Usuario | null | undefined, institutionCount = 1) {
-  return isPlatformAdmin(user) || institutionCount > 1;
+  return Boolean(user) && institutionCount > 1;
 }
 
 export function getAccessibleInstitutionId(user: Usuario | null | undefined, requestedInstitutionId?: number | null) {
@@ -96,7 +96,7 @@ export function filterByInstitution<T>(items: T[], user: Usuario | null | undefi
 }
 
 export function filterByActiveInstitution<T>(items: T[], user: Usuario | null | undefined, getInstitutionId: (item: T) => number | undefined) {
-  if (!user?.idInstituicao) {
+  if (!user?.idInstituicao || isPlatformAdmin(user)) {
     return items;
   }
 
@@ -114,6 +114,14 @@ export function getDefaultRolesForInstitutionType(tipo?: TipoInstituicao | null)
 
   if (tipo === "EMPRESA") {
     return ["ceo", "diretor", "gerente", "supervisor", "colaborador"];
+  }
+
+  if (tipo === "ORGAO_PUBLICO") {
+    return ["gestor", "coordenador", "servidor"];
+  }
+
+  if (tipo === "CENTRO_PESQUISA") {
+    return ["coordenador", "pesquisador", "tecnico"];
   }
 
   if (tipo === "COWORKING") {

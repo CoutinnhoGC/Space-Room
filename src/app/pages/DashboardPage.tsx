@@ -94,12 +94,12 @@ export function DashboardPage() {
         <div className="flex flex-wrap items-center justify-between gap-4">
           <div>
             <h1 className="text-2xl font-semibold text-gray-900 dark:text-slate-100">Dashboard</h1>
-            <p className="mt-1 text-sm text-gray-500 dark:text-slate-400">{selectedInstitution?.nomeFantasia ?? "Visao geral"} • {formatLongDate(new Date())}</p>
+            <p className="mt-1 text-sm text-gray-500 dark:text-slate-400">{selectedInstitution?.nomeFantasia ?? "Visão geral"} • {formatLongDate(new Date())}</p>
           </div>
           <div className="min-w-[220px] rounded-xl border border-gray-100 bg-white px-4 py-3 dark:border-slate-800 dark:bg-slate-950">
-            <div className="text-xs uppercase tracking-wide text-gray-500 dark:text-slate-400">Visao aplicada</div>
+            <div className="text-xs uppercase tracking-wide text-gray-500 dark:text-slate-400">Visão aplicada</div>
             <div className="mt-1 text-sm font-medium text-gray-900 dark:text-slate-100">Reservas {getDashboardPeriodLabel(filters.period)}</div>
-            <div className="mt-1 text-xs text-gray-500 dark:text-slate-400">{filteredReservations.length} reserva(s), {visibleSpaces.length} espaco(s), {filteredUsers.length} usuario(s)</div>
+            <div className="mt-1 text-xs text-gray-500 dark:text-slate-400">{filteredReservations.length} reserva(s), {visibleSpaces.length} espaço(s), {filteredUsers.length} usuário(s)</div>
           </div>
         </div>
       </div>
@@ -108,16 +108,16 @@ export function DashboardPage() {
 
       <div className="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <SummaryCard title={`Reservas ${getDashboardPeriodLabel(filters.period)}`} value={String(filteredReservations.length)} icon={Calendar} />
-        <SummaryCard title="Espacos ocupados agora" value={String(metrics.espacosOcupadosAgora)} icon={MapPin} iconColor="text-orange-600 dark:text-orange-300" iconBgColor="bg-orange-50 dark:bg-orange-950/30" />
+        <SummaryCard title="Espaços ocupados agora" value={String(metrics.espacosOcupadosAgora)} icon={MapPin} iconColor="text-orange-600 dark:text-orange-300" iconBgColor="bg-orange-50 dark:bg-orange-950/30" />
         <SummaryCard title="Reservas pendentes" value={String(metrics.reservasPendentes)} icon={Clock} iconColor="text-yellow-600 dark:text-yellow-300" iconBgColor="bg-yellow-50 dark:bg-yellow-950/30" />
-        <SummaryCard title="Taxa de ocupacao" value={`${metrics.taxaOcupacao}%`} icon={TrendingUp} iconColor="text-green-600 dark:text-green-300" iconBgColor="bg-green-50 dark:bg-green-950/30" />
+        <SummaryCard title="Taxa de ocupação" value={`${metrics.taxaOcupacao}%`} icon={TrendingUp} iconColor="text-green-600 dark:text-green-300" iconBgColor="bg-green-50 dark:bg-green-950/30" />
       </div>
 
       <div className="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <SummaryCard title="Espacos disponiveis" value={String(metrics.espacosDisponiveis)} icon={CheckCircle} iconColor="text-green-600 dark:text-green-300" iconBgColor="bg-green-50 dark:bg-green-950/30" />
-        <SummaryCard title="Usuarios ativos" value={String(metrics.usuariosAtivos)} icon={Activity} iconColor="text-sky-600 dark:text-sky-300" iconBgColor="bg-sky-50 dark:bg-sky-950/30" />
-        <SummaryCard title="Total de espacos" value={String(metrics.totalEspacos)} icon={MapPin} iconColor="text-slate-600 dark:text-slate-300" iconBgColor="bg-slate-100 dark:bg-slate-900" />
-        <SummaryCard title="Instituicoes visiveis" value={String(showInstitutionFilter ? (effectiveInstitutionId === "TODAS" ? visibleInstitutions.length : selectedInstitution ? 1 : 0) : selectedInstitution ? 1 : 0)} icon={Building2} iconColor="text-blue-600 dark:text-blue-300" iconBgColor="bg-blue-50 dark:bg-blue-950/30" />
+        <SummaryCard title="Espaços disponíveis" value={String(metrics.espacosDisponiveis)} icon={CheckCircle} iconColor="text-green-600 dark:text-green-300" iconBgColor="bg-green-50 dark:bg-green-950/30" />
+        <SummaryCard title="Usuários ativos" value={String(metrics.usuariosAtivos)} icon={Activity} iconColor="text-sky-600 dark:text-sky-300" iconBgColor="bg-sky-50 dark:bg-sky-950/30" />
+        <SummaryCard title="Total de espaços" value={String(metrics.totalEspacos)} icon={MapPin} iconColor="text-slate-600 dark:text-slate-300" iconBgColor="bg-slate-100 dark:bg-slate-900" />
+        <SummaryCard title="Instituições visíveis" value={String(showInstitutionFilter ? (effectiveInstitutionId === "TODAS" ? visibleInstitutions.length : selectedInstitution ? 1 : 0) : selectedInstitution ? 1 : 0)} icon={Building2} iconColor="text-blue-600 dark:text-blue-300" iconBgColor="bg-blue-50 dark:bg-blue-950/30" />
       </div>
 
       <div className="mb-6 grid grid-cols-1 gap-6 lg:grid-cols-2">

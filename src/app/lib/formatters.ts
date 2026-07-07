@@ -36,7 +36,7 @@ export function getStatusReservaLabel(status?: StatusReserva | null) {
     PENDENTE: "Pendente",
     CONFIRMADA: "Confirmada",
     CANCELADA: "Cancelada",
-    CONCLUIDA: "ConcluÌda",
+    CONCLUIDA: "Conclu√≠da",
   };
 
   return map[status ?? "PENDENTE"];
@@ -54,16 +54,19 @@ export function getStatusReservaColor(status?: StatusReserva | null) {
 }
 
 export function getInstituicaoNome(instituicao?: Instituicao | null) {
-  return instituicao?.nomeFantasia ?? "InstituiÁ„o n„o informada";
+  return instituicao?.nomeFantasia ?? "Institui√ß√£o n√£o informada";
 }
 
 export function getTipoInstituicaoLabel(tipo?: TipoInstituicao | null) {
   const map: Record<TipoInstituicao, string> = {
+    INSTITUICAO_ENSINO: "Institui√ß√£o de Ensino",
     ESCOLA: "Escola",
     FACULDADE: "Faculdade",
     UNIVERSIDADE: "Universidade",
     SENAI: "Senai",
     EMPRESA: "Empresa",
+    ORGAO_PUBLICO: "√ìrg√£o P√∫blico",
+    CENTRO_PESQUISA: "Centro de Pesquisa",
     COWORKING: "Coworking",
     OUTRO: "Outro",
   };
@@ -74,11 +77,11 @@ export function getTipoInstituicaoLabel(tipo?: TipoInstituicao | null) {
 export function getTipoEspacoLabel(tipo?: TipoEspaco | null) {
   const map: Record<TipoEspaco, string> = {
     SALA: "Sala",
-    LABORATORIO: "LaboratÛrio",
-    AUDITORIO: "AuditÛrio",
+    LABORATORIO: "Laborat√≥rio",
+    AUDITORIO: "Audit√≥rio",
     BIBLIOTECA: "Biblioteca",
     COWORKING: "Coworking",
-    SALA_REUNIAO: "Sala de Reuni„o",
+    SALA_REUNIAO: "Sala de Reuni√£o",
     OUTRO: "Outro",
   };
 
